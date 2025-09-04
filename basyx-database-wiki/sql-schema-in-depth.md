@@ -92,10 +92,10 @@ Each AAS element type with additional data has its own table, always with a 1:1 
 
 ## Indexes and Performance
 
-**GIN/Trigram Indexes**: These indexes use PostgreSQL's Generalized Inverted Index (GIN) with the `pg_trgm` extension to enable fast, case-insensitive, and fuzzy text search on large text fields such as `value_text` and `key_value`. This is especially useful for searching and filtering submodel elements or properties by partial matches or similar strings.
-**GIST/Ltree Indexes**: The Generalized Search Tree (GIST) index, combined with the `ltree` extension, allows for highly efficient querying of hierarchical data stored in the `path_ltree` column. This enables rapid retrieval of all descendants, ancestors, or subtrees within the submodel element hierarchy, which is critical for navigating complex AAS structures.
-**Partial Indexes**: Partial indexes are created on value columns (such as numeric, date, or boolean fields) but only for rows matching specific criteria (e.g., a certain data type). This reduces index size and improves query performance by indexing only the relevant subset of data, making lookups for specific value types much faster.
-**Unique Constraints**: Unique constraints on combinations like `(submodel_id, parent_sme_id, id_short)` and `(submodel_id, parent_sme_id, position)` ensure that each submodel element has a unique short identifier and position among its siblings. This prevents data inconsistencies and supports reliable navigation and manipulation of the element tree.
+- **GIN/Trigram Indexes**: These indexes use PostgreSQL's Generalized Inverted Index (GIN) with the `pg_trgm` extension to enable fast, case-insensitive, and fuzzy text search on large text fields such as `value_text` and `key_value`. This is especially useful for searching and filtering submodel elements or properties by partial matches or similar strings.
+- **GIST/Ltree Indexes**: The Generalized Search Tree (GIST) index, combined with the `ltree` extension, allows for highly efficient querying of hierarchical data stored in the `path_ltree` column. This enables rapid retrieval of all descendants, ancestors, or subtrees within the submodel element hierarchy, which is critical for navigating complex AAS structures.
+- **Partial Indexes**: Partial indexes are created on value columns (such as numeric, date, or boolean fields) but only for rows matching specific criteria (e.g., a certain data type). This reduces index size and improves query performance by indexing only the relevant subset of data, making lookups for specific value types much faster.
+- **Unique Constraints**: Unique constraints on combinations like `(submodel_id, parent_sme_id, id_short)` and `(submodel_id, parent_sme_id, position)` ensure that each submodel element has a unique short identifier and position among its siblings. This prevents data inconsistencies and supports reliable navigation and manipulation of the element tree.
 
 ## Design Rationale
 

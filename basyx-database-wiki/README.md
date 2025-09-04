@@ -11,6 +11,7 @@ Welcome to the developer documentation for the BaSyx database schema. This docum
 - [Enums & Types](./enums.md)
 - [Extensions](./extensions.md)
 - [Usage Notes](./usage-notes.md)
+- [Examples](./examples.md)
 
 ---
 

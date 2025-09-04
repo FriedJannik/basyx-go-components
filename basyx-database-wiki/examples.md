@@ -58,7 +58,7 @@ INSERT INTO reference_key (id, reference_id, position, type, value)
 VALUES (2, 2, 0, 'Submodel', 'http://iese.fraunhofer.de/id/sm/DemoSubmodel');
 
 INSERT INTO submodel_element(id, submodel_id, parent_sme_id, position, id_short, category, model_type, semantic_id, idshort_path)
-VALUES (2, 'http://iese.fraunhofer.de/id/sm/DemoSubmodel', NULL, 0, 'DemoProperty', 'DemoCategory', 'Property', 2, 'http://example.com/keys/123');
+VALUES (2, 'http://iese.fraunhofer.de/id/sm/DemoSubmodel', NULL, 0, 'DemoProperty', 'DemoCategory', 'Property', 2, 'DemoProperty');
 
 INSERT INTO property_element (id, value_type, value_text)
 VALUES(1, 'xs:string', 'Demo Property Value');

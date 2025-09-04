@@ -4,7 +4,7 @@ const { Pool } = pkg;
 const pool = new Pool({
   user: 'admin',
   host: 'localhost',
-  database: 'basyxTest',
+  database: 'basyx',
   password: 'admin123',
   port: 5432
 });
@@ -45,14 +45,9 @@ async function fetchSubmodel(submodelId) {
                        p.value_num::text,
                        p.value_bool::text,
                        p.value_time::text,
-                       p.value_datetime::text) AS prop_value,
-              f.value AS file_value, f.content_type AS file_type,
-              v.language AS ml_lang, v.text AS ml_text
+                       p.value_datetime::text) AS prop_value
        FROM submodel_element e
        LEFT JOIN property_element p ON p.id = e.id
-       LEFT JOIN file_element f ON f.id = e.id
-       LEFT JOIN multilanguage_property m ON m.id = e.id
-       LEFT JOIN multilanguage_property_value v ON v.mlp_id = m.id
        WHERE e.submodel_id = $1
        ORDER BY e.parent_sme_id NULLS FIRST, e.position, e.id`, [submodelId]
     );
@@ -81,6 +76,9 @@ async function fetchSubmodel(submodelId) {
         if (row.model_type === 'SubmodelElementCollection') {
           elem.value = [];
         }
+        if (row.model_type === 'SubmodelElementList') {
+          elem.value = [];
+        }
 
         elementMap[row.id] = elem;
         elementMap[row.id]._parentId = row.parent_sme_id; // keep for tree building
@@ -101,6 +99,11 @@ async function fetchSubmodel(submodelId) {
       if (elem._parentId) {
         const parent = elementMap[elem._parentId];
         if (parent && Array.isArray(parent.value)) {
+          if(parent.modelType === 'SubmodelElementList') {
+            delete elem.idShort; // lists do not have idShorts
+            delete elem.position; // lists do not have positions
+          }
+          delete elem.id;
           parent.value.push(elem);
         }
       } else {
@@ -125,8 +128,10 @@ async function fetchSubmodel(submodelId) {
 // run as script
 (async () => {
   try {
-    const submodel = await fetchSubmodel('sm-42');
+    const submodel = await fetchSubmodel('http://iese.fraunhofer.de/id/sm/DemoSubmodel');
     console.log(JSON.stringify(submodel, null, 2));
+    const submodel2 = await fetchSubmodel('sm-42');
+    console.log(JSON.stringify(submodel2, null, 2));
     await pool.end();
   } catch (err) {
     console.error('Error:', err);

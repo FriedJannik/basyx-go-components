@@ -1,5 +1,3 @@
--- Active: 1756820296152@@127.0.0.1@5432@basyxTest
--- Active: 1756820296152@@127.0.0.1@5432@basyxTest@basyxTest
 -- ------------------------------------------
 -- Extensions
 -- ------------------------------------------
@@ -31,9 +29,7 @@ CREATE TYPE direction AS ENUM ('input','output');
 CREATE TYPE state_of_event AS ENUM ('off','on');
 CREATE TYPE operation_var_role AS ENUM ('in','out','inout');
 
--- ------------------------------------------
--- Reference (für semanticId etc.)  --  keys[i] muss die Reihenfolge behalten!
--- ------------------------------------------
+-- Reference (for semanticId etc.)  --  keys[i] keeps track of order
 CREATE TABLE reference (
   id           BIGSERIAL PRIMARY KEY,
   type         reference_types NOT NULL
@@ -48,13 +44,9 @@ CREATE TABLE reference_key (
   UNIQUE(reference_id, position)
 );
 
--- Indexe für schnelle Filter
 CREATE INDEX ix_refkey_type_val     ON reference_key(type, value);
 CREATE INDEX ix_refkey_val_trgm     ON reference_key USING GIN (value gin_trgm_ops);
 
--- ------------------------------------------
--- Submodel
--- ------------------------------------------
 CREATE TABLE submodel (
   id          TEXT PRIMARY KEY,                 -- Identifiable.id
   id_short    TEXT,
@@ -65,7 +57,6 @@ CREATE TABLE submodel (
 );
 CREATE INDEX ix_sm_idshort ON submodel(id_short);
 
--- Optionaler Denormalisierungs-Index (Semantics → schnelles Lookup, inkl. position)
 CREATE TABLE submodel_semantic_key (
   submodel_id TEXT NOT NULL REFERENCES submodel(id) ON DELETE CASCADE,
   position    INTEGER NOT NULL,
@@ -76,37 +67,31 @@ CREATE TABLE submodel_semantic_key (
 CREATE INDEX ix_smsem_key     ON submodel_semantic_key(key_type, key_value);
 CREATE INDEX ix_smsem_val_trgm ON submodel_semantic_key USING GIN (key_value gin_trgm_ops);
 
--- ------------------------------------------
--- Submodel Elements  (Baum + Pfad + Position)
--- ------------------------------------------
 CREATE TABLE submodel_element (
   id             BIGSERIAL PRIMARY KEY,
   submodel_id    TEXT NOT NULL REFERENCES submodel(id) ON DELETE CASCADE,
   parent_sme_id  BIGINT REFERENCES submodel_element(id) ON DELETE CASCADE,
-  position       INTEGER,                                   -- für [i] in Listen
+  position       INTEGER,                                   -- for ordering in lists
   id_short       TEXT NOT NULL,
   category       TEXT,
   model_type     aas_submodel_elements NOT NULL,
   semantic_id    BIGINT REFERENCES reference(id),
-  path_ltree     LTREE NOT NULL,                            -- z.B. sm_abc.sensors.2.temperature
+  idshort_path   TEXT NOT NULL,                            -- e.g. sm_abc.sensors[2].temperature
   CONSTRAINT uq_sibling_idshort UNIQUE (submodel_id, parent_sme_id, id_short),
   CONSTRAINT uq_sibling_pos     UNIQUE (submodel_id, parent_sme_id, position)
 );
 
--- Pfad-/Typ-Indexe
-CREATE INDEX ix_sme_path_gist      ON submodel_element USING GIST (path_ltree);
-CREATE INDEX ix_sme_sub_path       ON submodel_element(submodel_id, path_ltree);
+CREATE INDEX ix_sme_path_gist      ON submodel_element USING GIN (idshort_path gin_trgm_ops);
+CREATE INDEX ix_sme_sub_path       ON submodel_element(submodel_id, idshort_path);
 CREATE INDEX ix_sme_parent_pos     ON submodel_element(parent_sme_id, position);
 CREATE INDEX ix_sme_sub_type       ON submodel_element(submodel_id, model_type);
 
--- Supplemental Semantic IDs (falls benötigt)
 CREATE TABLE sme_supplemental_semantic (
   sme_id       BIGINT NOT NULL REFERENCES submodel_element(id) ON DELETE CASCADE,
   reference_id BIGINT NOT NULL REFERENCES reference(id) ON DELETE CASCADE,
   PRIMARY KEY (sme_id, reference_id)
 );
 
--- Denormalisierte Semantik-Keys für SME (optional, schnell)
 CREATE TABLE sme_semantic_key (
   sme_id     BIGINT NOT NULL REFERENCES submodel_element(id) ON DELETE CASCADE,
   position   INTEGER NOT NULL,
@@ -117,10 +102,7 @@ CREATE TABLE sme_semantic_key (
 CREATE INDEX ix_smesem_key       ON sme_semantic_key(key_type, key_value);
 CREATE INDEX ix_smesem_val_trgm  ON sme_semantic_key USING GIN (key_value gin_trgm_ops);
 
--- ------------------------------------------
--- Spezialisierungen (1:1 zu submodel_element.id)
--- ------------------------------------------
--- Property (typisiert für schnelle Vergleiche)
+-- Property (typed for fast comparisons)
 CREATE TABLE property_element (
   id            BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   value_type    data_type_def_xsd NOT NULL,
@@ -131,7 +113,7 @@ CREATE TABLE property_element (
   value_datetime TIMESTAMPTZ,
   value_id      BIGINT REFERENCES reference(id)
 );
--- Teilindizes (klein + schnell)
+-- Partial indexes (small + fast)
 CREATE INDEX ix_prop_num      ON property_element(value_num)
   WHERE value_type IN ('xs:byte','xs:int','xs:integer','xs:long','xs:short',
                        'xs:decimal','xs:double','xs:float','xs:nonNegativeInteger',
@@ -146,7 +128,6 @@ CREATE INDEX ix_prop_bool     ON property_element(value_bool)
 CREATE INDEX ix_prop_text_trgm ON property_element USING GIN (value_text gin_trgm_ops)
   WHERE value_type = 'xs:string';
 
--- MultiLanguageProperty
 CREATE TABLE multilanguage_property (
   id        BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   value_id  BIGINT REFERENCES reference(id)
@@ -160,14 +141,12 @@ CREATE TABLE multilanguage_property_value (
 CREATE INDEX ix_mlp_lang      ON multilanguage_property_value(mlp_id, language);
 CREATE INDEX ix_mlp_text_trgm ON multilanguage_property_value USING GIN (text gin_trgm_ops);
 
--- Blob
 CREATE TABLE blob_element (
   id           BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   content_type TEXT,
   value        BYTEA
 );
 
--- File
 CREATE TABLE file_element (
   id           BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   content_type TEXT,
@@ -175,7 +154,7 @@ CREATE TABLE file_element (
 );
 CREATE INDEX ix_file_value_trgm ON file_element USING GIN (value gin_trgm_ops);
 
--- Range (ebenfalls typisiert)
+-- Range (also typed)
 CREATE TABLE range_element (
   id            BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   value_type    data_type_def_xsd NOT NULL,
@@ -194,13 +173,11 @@ CREATE INDEX ix_range_dt  ON range_element(min_datetime, max_datetime)
 CREATE INDEX ix_range_time ON range_element(min_time, max_time)
   WHERE value_type = 'xs:time';
 
--- ReferenceElement
 CREATE TABLE reference_element (
   id        BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   value_ref BIGINT REFERENCES reference(id)
 );
 
--- RelationshipElement (+ AnnotatedRelationshipElement)
 CREATE TABLE relationship_element (
   id         BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   first_ref  BIGINT REFERENCES reference(id),
@@ -212,7 +189,6 @@ CREATE TABLE annotated_rel_annotation (
   PRIMARY KEY (rel_id, annotation_sme)
 );
 
--- Collections/Lists
 CREATE TABLE submodel_element_collection (
   id BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE
 );
@@ -224,7 +200,6 @@ CREATE TABLE submodel_element_list (
   value_type_list_element    data_type_def_xsd
 );
 
--- Entity
 CREATE TABLE entity_element (
   id              BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   entity_type     entity_type NOT NULL,
@@ -238,7 +213,6 @@ CREATE TABLE entity_specific_asset_id (
   external_subject_ref BIGINT REFERENCES reference(id)
 );
 
--- Operation
 CREATE TABLE operation_element (
   id BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE
 );
@@ -251,7 +225,6 @@ CREATE TABLE operation_variable (
   UNIQUE (operation_id, role, position)
 );
 
--- BasicEventElement
 CREATE TABLE basic_event_element (
   id                BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE,
   observed_ref      BIGINT REFERENCES reference(id),
@@ -265,12 +238,11 @@ CREATE TABLE basic_event_element (
 );
 CREATE INDEX ix_bee_lastupd ON basic_event_element(last_update);
 
--- Capability (Marker)
 CREATE TABLE capability_element (
   id BIGINT PRIMARY KEY REFERENCES submodel_element(id) ON DELETE CASCADE
 );
 
--- Qualifier (an beliebigen SME)
+-- Qualifier (on any SME)
 CREATE TABLE qualifier (
   id                BIGSERIAL PRIMARY KEY,
   submodel_element_id BIGINT NOT NULL REFERENCES submodel_element(id) ON DELETE CASCADE,

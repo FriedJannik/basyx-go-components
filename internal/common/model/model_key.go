@@ -9,11 +9,28 @@
 
 package model
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 // Key type of Key
 type Key struct {
-	Type KeyTypes `json:"type"`
+	DbID      int64          `json:"-" gorm:"column:id;uniqueIndex"`
+	CreatedAt time.Time      `json:"-" gorm:"autoCreateTime"`
+	UpdatedAt time.Time      `json:"-" gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	Type      KeyTypes       `json:"type"`
 
 	Value string `json:"value" validate:"regexp=^([\\\\x09\\\\x0a\\\\x0d\\\\x20-\\\\ud7ff\\\\ue000-\\\\ufffd]|\\\\ud800[\\\\udc00-\\\\udfff]|[\\\\ud801-\\\\udbfe][\\\\udc00-\\\\udfff]|\\\\udbff[\\\\udc00-\\\\udfff])*$"`
+
+	// Foreign key fields for GORM relationships
+	ReferenceID             *uint `json:"-" gorm:"index"`
+	ReferenceValueID        *uint `json:"-" gorm:"index"`
+	ReferenceElementValueID *uint `json:"-" gorm:"index"`
+	ReferenceParentID       *uint `json:"-" gorm:"index"`
+	SubmodelElementValueID  *uint `json:"-" gorm:"index"`
 }
 
 // AssertKeyRequired checks if the required fields are not zero-ed

@@ -9,12 +9,22 @@
 
 package model
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 // Extension type of Extension
 type Extension struct {
-	SemanticID *Reference `json:"semanticId,omitempty"`
+	DbID       int64          `json:"-" gorm:"column:id;uniqueIndex"`
+	CreatedAt  time.Time      `json:"-" gorm:"autoCreateTime"`
+	UpdatedAt  time.Time      `json:"-" gorm:"autoUpdateTime"`
+	DeletedAt  gorm.DeletedAt `json:"-" gorm:"index"`
+	SemanticID *Reference     `json:"semanticId,omitempty" gorm:"type:jsonb;serializer:json"`
 
 	//nolint:all
-	SupplementalSemanticIds []Reference `json:"supplementalSemanticIds,omitempty"`
+	SupplementalSemanticIds []Reference `json:"supplementalSemanticIds,omitempty" gorm:"type:jsonb;serializer:json"`
 
 	Name string `json:"name" validate:"regexp=^([\\\\x09\\\\x0a\\\\x0d\\\\x20-\\\\ud7ff\\\\ue000-\\\\ufffd]|\\\\ud800[\\\\udc00-\\\\udfff]|[\\\\ud801-\\\\udbfe][\\\\udc00-\\\\udfff]|\\\\udbff[\\\\udc00-\\\\udfff])*$"`
 
@@ -22,7 +32,10 @@ type Extension struct {
 
 	Value string `json:"value,omitempty"`
 
-	RefersTo []Reference `json:"refersTo,omitempty"`
+	RefersTo []Reference `json:"refersTo,omitempty" gorm:"type:jsonb;serializer:json"`
+
+	// Foreign key for parent relationships
+	SubmodelID *string `json:"-" gorm:"index"`
 }
 
 // AssertExtensionRequired checks if the required fields are not zero-ed

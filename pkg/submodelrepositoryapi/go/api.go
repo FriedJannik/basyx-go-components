@@ -16,6 +16,7 @@ import (
 	"os"
 
 	"github.com/eclipse-basyx/basyx-go-components/internal/common/model"
+	"github.com/eclipse-basyx/basyx-go-components/internal/common/model/grammar"
 )
 
 // DescriptionAPIAPIRouter defines the required methods for binding the api requests to a responses for the DescriptionAPIAPI
@@ -104,6 +105,7 @@ type SerializationAPIAPIServicer interface {
 type SubmodelRepositoryAPIAPIServicer interface {
 	GetAllSubmodels(context.Context, string, string, int32, string, string, string) (model.ImplResponse, error)
 	PostSubmodel(context.Context, model.Submodel) (model.ImplResponse, error)
+	QuerySubmodels(context.Context, grammar.QueryWrapper, int32, string) (model.ImplResponse, error)
 	GetAllSubmodelsMetadata(context.Context, string, string, int32, string) (model.ImplResponse, error)
 	GetAllSubmodelsValueOnly(context.Context, string, string, int32, string, string, string) (model.ImplResponse, error)
 	GetAllSubmodelsReference(context.Context, string, string, int32, string, string) (model.ImplResponse, error)

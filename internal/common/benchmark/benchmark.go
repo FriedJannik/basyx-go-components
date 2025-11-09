@@ -11,6 +11,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/eclipse-basyx/basyx-go-components/internal/common/model"
 	gen "github.com/eclipse-basyx/basyx-go-components/internal/common/model"
 )
 
@@ -29,12 +30,12 @@ var stats BenchmarkStats
 var threads = 28
 
 // Total Number of elements = submodelElementCount*nestingLevel
-var submodelElementCount = 20
-var nestingLevel = 20
+var submodelElementCount = 1
+var nestingLevel = 100
 var shouldPost = true
-var shouldGet = true
+var shouldGet = !true
 var shouldDelete = !true
-var baseURL = "http://localhost:5005"
+var baseURL = "http://localhost:5004"
 
 // Shared HTTP client for reuse and performance
 var httpClient = &http.Client{
@@ -124,6 +125,7 @@ func runBenchmarkPhase(phase string, action func(int, []byte)) {
 					sme := generateNestedSubmodelElements(i)
 					var err error
 					body, err = json.Marshal(sme)
+					fmt.Print(string(body))
 					if err != nil {
 						fmt.Println("Error marshaling JSON:", err)
 						continue
@@ -202,6 +204,23 @@ func generateNestedSubmodelElements(level int) gen.SubmodelElement {
 		nested := gen.SubmodelElementCollection{
 			IdShort:   "NestedLevel" + strconv.Itoa(i),
 			ModelType: "SubmodelElementCollection",
+		}
+
+		if (nestingLevel - 1) == i {
+			propA := model.Property{
+				IdShort:   "Test",
+				ValueType: model.DATATYPEDEFXSD_XS_STRING,
+				Value:     "TestValue",
+			}
+			propB := model.Property{
+				IdShort:   "TestB",
+				ValueType: model.DATATYPEDEFXSD_XS_STRING,
+				Value:     "TestValueB",
+			}
+			nested.Value = []model.SubmodelElement{
+				&propA,
+				&propB,
+			}
 		}
 
 		LastElement.Value = append(LastElement.Value, &nested)

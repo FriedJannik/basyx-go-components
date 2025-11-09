@@ -9,13 +9,23 @@
 
 package model
 
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
+
 // Reference type of Reference
 type Reference struct {
-	Type ReferenceTypes `json:"type"`
+	DbID      int64          `json:"-" gorm:"column:id;uniqueIndex"`
+	CreatedAt time.Time      `json:"-" gorm:"autoCreateTime"`
+	UpdatedAt time.Time      `json:"-" gorm:"autoUpdateTime"`
+	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	Type      ReferenceTypes `json:"type"`
 
-	Keys []Key `json:"keys"`
+	Keys []Key `json:"keys" gorm:"foreignKey:ReferenceID"`
 
-	ReferredSemanticID *Reference `json:"referredSemanticId,omitempty"`
+	ReferredSemanticID *Reference `json:"referredSemanticId,omitempty" gorm:"type:jsonb;serializer:json"`
 }
 
 // AssertReferenceRequired checks if the required fields are not zero-ed

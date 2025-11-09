@@ -10,6 +10,7 @@
 package model
 
 import (
+	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -109,4 +110,31 @@ func AssertEmbeddedDataSpecificationConstraints(obj EmbeddedDataSpecification) e
 		}
 	}
 	return nil
+}
+
+// Value implements the driver.Valuer interface for GORM
+func (e EmbeddedDataSpecification) Value() (driver.Value, error) {
+	if e.DataSpecificationContent == nil {
+		return nil, nil
+	}
+	return json.Marshal(e)
+}
+
+// Scan implements the sql.Scanner interface for GORM
+func (e *EmbeddedDataSpecification) Scan(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	var bytes []byte
+	switch v := value.(type) {
+	case []byte:
+		bytes = v
+	case string:
+		bytes = []byte(v)
+	default:
+		return fmt.Errorf("failed to scan EmbeddedDataSpecification: unsupported type %T", value)
+	}
+
+	return e.UnmarshalJSON(bytes)
 }

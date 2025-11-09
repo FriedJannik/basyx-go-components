@@ -236,64 +236,92 @@ func (le *LogicalExpression) evaluateComparison(operands []Value, operation stri
 	return HandleComparison(leftOperand, rightOperand, operation)
 }
 
-// ParseAASQLFieldToSQLColumn translates AAS query language field names to SQL column names.
+// ParseAASQLFieldToJSONBPath translates AAS query language field names to JSONB path expressions.
 //
 // This function maps AAS-specific field references (like $sm#idShort, $sm#semanticId) to their
-// corresponding database column names used in SQL queries. It handles both exact matches and
-// pattern-based field references (e.g., semanticId.keys[].value).
+// corresponding JSONB paths for querying data stored in PostgreSQL JSONB columns with GORM.
 //
-// Supported field mappings:
-//   - $sm#idShort -> s.id_short
-//   - $sm#id -> s.id
-//   - $sm#semanticId -> semantic_id_reference_key.value
-//   - $sm#semanticId.type -> semantic_id_reference.type
-//   - $sm#semanticId.keys[].value -> semantic_id_reference_key.value
-//   - $sm#semanticId.keys[].type -> semantic_id_reference_key.type
-//   - $sm#semanticId.keys[N].value -> semantic_id_reference_key.value (with position constraint)
-//   - $sm#semanticId.keys[N].type -> semantic_id_reference_key.type (with position constraint)
+// Supported field mappings for GORM/JSONB structure:
+//
+// Submodel fields ($sm#):
+//   - $sm#idShort -> id_short (regular column)
+//   - $sm#id -> submodel_id (regular column)
+//   - $sm#semanticId -> semantic_id->'keys'->0->>'value' (shorthand for keys[0].value)
+//   - $sm#semanticId.type -> semantic_id->>'type'
+//   - $sm#semanticId.keys[].value -> semantic_id->'keys' (for array operations)
+//   - $sm#semanticId.keys[].type -> semantic_id->'keys' (for array operations)
+//   - $sm#semanticId.keys[N].value -> semantic_id->'keys'->N->>'value'
+//   - $sm#semanticId.keys[N].type -> semantic_id->'keys'->N->>'type'
+//
+// Submodel element fields ($sme#):
+//   - $sme#semanticId -> submodel_elements @? path for semanticId.keys[0].value (uses @? operator)
+//   - $sme#semanticId.keys[].value -> submodel_elements @? path (for array wildcard)
+//   - $sme#semanticId.keys[N].value -> submodel_elements @? path (for specific index)
 //
 // Parameters:
 //   - field: AAS query language field reference string
 //
 // Returns:
-//   - string: The corresponding SQL column name, or the original field if no mapping exists
-func ParseAASQLFieldToSQLColumn(field string) string {
+//   - jsonbPath: The JSONB path expression for the field
+//   - arrayIndex: The array index if querying a specific position, or -1 for wildcard
+//   - isJSONB: true if this is a JSONB column access, false for regular column
+func ParseAASQLFieldToJSONBPath(field string) (jsonbPath string, arrayIndex int, isJSONB bool) {
+	// Handle $sm# (submodel) fields
 	switch field {
 	case "$sm#idShort":
-		return "s.id_short"
+		return "id_short", -1, false
 	case "$sm#id":
-		return "s.id"
-	case "$sm#semanticId":
-		return "semantic_id_reference_key.value"
+		return "submodel_id", -1, false
+	case "$sm#semanticId": // Shorthand for keys[0].value
+		return "semantic_id->'keys'->0->>'value'", 0, true
 	case "$sm#semanticId.type":
-		return "semantic_id_reference.type"
+		return "semantic_id->>'type'", -1, true
 	case "$sm#semanticId.keys[].value":
-		return "semantic_id_reference_key.value"
+		return "semantic_id->'keys'", -1, true
 	case "$sm#semanticId.keys[].type":
-		return "semantic_id_reference_key.type"
+		return "semantic_id->'keys'", -1, true
 	}
 
-	if strings.HasPrefix(field, "$sm#semanticId.keys[") && strings.HasSuffix(field, "].value") {
-		return "semantic_id_reference_key.value"
-	}
-	if strings.HasPrefix(field, "$sm#semanticId.keys[") && strings.HasSuffix(field, "].type") {
-		return "semantic_id_reference_key.type"
+	// Handle specific array index access: $sm#semanticId.keys[N].value or .type
+	if strings.HasPrefix(field, "$sm#semanticId.keys[") {
+		start := strings.Index(field, "[")
+		end := strings.Index(field, "]")
+
+		if start != -1 && end != -1 && end > start+1 {
+			indexStr := field[start+1 : end]
+			index, err := strconv.Atoi(indexStr)
+			if err == nil {
+				// Valid numeric index
+				if strings.HasSuffix(field, "].value") {
+					return fmt.Sprintf("semantic_id->'keys'->%d->>'value'", index), index, true
+				} else if strings.HasSuffix(field, "].type") {
+					return fmt.Sprintf("semantic_id->'keys'->%d->>'type'", index), index, true
+				}
+			}
+		}
 	}
 
-	return field
+	// Handle $sme# (submodel element) fields - these query into the submodel_elements JSONB array
+	if strings.HasPrefix(field, "$sme#") {
+		// For $sme# fields, return a marker that will be handled specially
+		// The actual JSONB path query will be built in buildJSONBArrayComparisonExpression
+		return field, -1, true
+	}
+
+	return field, -1, false
 }
 
-// HandleComparison builds a SQL comparison expression from two Value operands.
+// HandleComparison builds a SQL comparison expression from two Value operands for GORM/JSONB.
 //
 // This function handles all combinations of operand types: field-to-field, field-to-value,
-// value-to-field, and value-to-value comparisons. It validates that value-to-value comparisons
-// have matching types and adds special constraints for AAS semantic ID fields, such as position
-// constraints for specific key indices.
+// value-to-field, and value-to-value comparisons. It uses PostgreSQL JSONB operators to
+// query data stored in JSONB columns, and validates that value-to-value comparisons have
+// matching types.
 //
-// Special handling for semantic IDs:
-//   - Shorthand references ($sm#semanticId) add position = 0 constraint
-//   - Specific key references ($sm#semanticId.keys[N].value) add position = N constraint
-//   - Wildcard references ($sm#semanticId.keys[].value) match any position
+// Special handling for semantic IDs with JSONB:
+//   - Shorthand references ($sm#semanticId) map to semantic_id->'keys'->0->>'value'
+//   - Specific key references ($sm#semanticId.keys[N].value) map to semantic_id->'keys'->N->>'value'
+//   - Wildcard references ($sm#semanticId.keys[].value) use JSONB path queries for array matching
 //
 // Parameters:
 //   - leftOperand: The left side of the comparison (field or value)
@@ -301,21 +329,9 @@ func ParseAASQLFieldToSQLColumn(field string) string {
 //   - operation: The comparison operator ($eq, $ne, $gt, $ge, $lt, $le)
 //
 // Returns:
-//   - exp.Expression: A goqu expression representing the comparison with any necessary constraints
+//   - exp.Expression: A goqu expression representing the comparison using JSONB operators
 //   - error: An error if the operands are invalid, types don't match, or the operation is unsupported
 func HandleComparison(leftOperand, rightOperand *Value, operation string) (exp.Expression, error) {
-
-	// Convert both operands
-	leftSQL, err := toSQLComponent(leftOperand, "left")
-	if err != nil {
-		return nil, err
-	}
-
-	rightSQL, err := toSQLComponent(rightOperand, "right")
-	if err != nil {
-		return nil, err
-	}
-
 	// Validate value-to-value comparisons have matching types
 	if !leftOperand.IsField() && !rightOperand.IsField() {
 		if leftOperand.GetValueType() != rightOperand.GetValueType() {
@@ -324,105 +340,299 @@ func HandleComparison(leftOperand, rightOperand *Value, operation string) (exp.E
 		}
 	}
 
-	// Check if either operand is $sm#semanticID field
-	isLeftShorthandSemanticID := isSemanticIDShorthandField(leftOperand)
-	isRightShorthandSemanticID := isSemanticIDShorthandField(rightOperand)
+	// Check if we have array wildcard queries (keys[]) or submodel element queries ($sme#)
+	leftIsArrayWildcard, rightIsArrayWildcard := false, false
+	leftIsSME, rightIsSME := false, false
 
-	isLeftSpecificKeyValueSemanticID := isSemanticIDSpecificKeyValueField(leftOperand, false)
-	isRightSpecificKeyValueSemanticID := isSemanticIDSpecificKeyValueField(rightOperand, false)
+	if leftOperand.IsField() && leftOperand.Field != nil {
+		field := string(*leftOperand.Field)
+		leftIsArrayWildcard = (field == "$sm#semanticId.keys[].value" || field == "$sm#semanticId.keys[].type")
+		leftIsSME = strings.HasPrefix(field, "$sme#")
+	}
+	if rightOperand.IsField() && rightOperand.Field != nil {
+		field := string(*rightOperand.Field)
+		rightIsArrayWildcard = (field == "$sm#semanticId.keys[].value" || field == "$sm#semanticId.keys[].type")
+		rightIsSME = strings.HasPrefix(field, "$sme#")
+	}
 
-	isLeftSpecificKeyTypeSemanticID := isSemanticIDSpecificKeyValueField(leftOperand, true)
-	isRightSpecificKeyTypeSemanticID := isSemanticIDSpecificKeyValueField(rightOperand, true)
+	// Handle array wildcard queries and submodel element queries using JSONB path expressions
+	if (leftIsArrayWildcard || leftIsSME) && !rightOperand.IsField() {
+		return buildJSONBArrayComparisonExpression(leftOperand, rightOperand, operation, true)
+	}
+	if (rightIsArrayWildcard || rightIsSME) && !leftOperand.IsField() {
+		return buildJSONBArrayComparisonExpression(rightOperand, leftOperand, operation, false)
+	}
 
-	// Build the comparison expression
-	comparisonExpr, err := buildComparisonExpression(leftSQL, rightSQL, operation)
+	// Convert both operands to SQL components
+	leftSQL, err := toJSONBSQLComponent(leftOperand, "left")
 	if err != nil {
 		return nil, err
 	}
 
-	// If semantic_id is involved, add position = 0 constraint
-	if isLeftShorthandSemanticID || isRightShorthandSemanticID {
-		positionConstraint := goqu.I("semantic_id_reference_key.position").Eq(0)
-		return goqu.And(comparisonExpr, positionConstraint), nil
-	} else if (isLeftSpecificKeyValueSemanticID || isRightSpecificKeyValueSemanticID) || (isLeftSpecificKeyTypeSemanticID || isRightSpecificKeyTypeSemanticID) {
-
-		operandToUse := leftOperand
-		if isRightSpecificKeyValueSemanticID || isRightSpecificKeyTypeSemanticID {
-			operandToUse = rightOperand
-		}
-
-		start, end := getStartAndEndIndicesOfBrackets(operandToUse)
-		if isNotWildcardAndValidIndices(start, end) {
-			positionStrOnError, position, err := getPositionAsInteger(operandToUse, start, end)
-			if err == nil {
-				positionConstraint := goqu.I("semantic_id_reference_key.position").Eq(position)
-				return goqu.And(comparisonExpr, positionConstraint), nil
-			}
-			return nil, fmt.Errorf("invalid position in semanticID key field: %s", positionStrOnError)
-		}
+	rightSQL, err := toJSONBSQLComponent(rightOperand, "right")
+	if err != nil {
+		return nil, err
 	}
-	return comparisonExpr, nil
+
+	// Build the comparison expression
+	return buildComparisonExpression(leftSQL, rightSQL, operation)
 }
 
-func getPositionAsInteger(operandToUse *Value, start int, end int) (string, int, error) {
-	positionStr := string(*operandToUse.Field)[start+1 : end]
-	position, err := strconv.Atoi(positionStr)
-	return positionStr, position, err
-}
-
-func isNotWildcardAndValidIndices(start, end int) bool {
-	return start != -1 && end != -1 && start < end && (end-start > 1)
-}
-
-func getStartAndEndIndicesOfBrackets(operandToUse *Value) (int, int) {
-	start := strings.Index(string(*operandToUse.Field), "[")
-	end := strings.Index(string(*operandToUse.Field), "]")
-	return start, end
-}
-
-func isSemanticIDShorthandField(operand *Value) bool {
-	return operand.IsField() && operand.Field != nil && string(*operand.Field) == "$sm#semanticId"
-}
-
-func isSemanticIDSpecificKeyValueField(operand *Value, isTypeCheck bool) bool {
-	suffix := "value"
-	if isTypeCheck {
-		suffix = "type"
+// ToGORMWhere converts a LogicalExpression to a GORM-compatible WHERE clause.
+//
+// This helper function evaluates the logical expression and converts it to a format
+// that GORM can use directly. It returns a SQL string and its parameters that can
+// be passed to GORM's Where() method.
+//
+// Returns:
+//   - sql: The SQL WHERE clause string
+//   - args: The parameters for the SQL string
+//   - error: An error if the expression cannot be evaluated or converted
+func (le *LogicalExpression) ToGORMWhere() (sql string, args []interface{}, err error) {
+	expr, err := le.EvaluateToExpression()
+	if err != nil {
+		return "", nil, err
 	}
-	if !operand.IsField() || operand.Field == nil {
-		return false
+
+	// Use goqu to convert expression to SQL
+	dialect := goqu.Dialect("postgres")
+	sqlBuilder := dialect.From("submodels").Where(expr).Select(goqu.L("1"))
+
+	query, params, err := sqlBuilder.ToSQL()
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to convert expression to SQL: %w", err)
 	}
-	field := string(*operand.Field)
-	return strings.HasPrefix(field, "$sm#semanticId.keys[") && strings.HasSuffix(field, "]."+suffix)
+
+	// Extract just the WHERE clause part
+	// The query will be something like: SELECT 1 FROM "submodels" WHERE ...
+	whereIndex := strings.Index(query, "WHERE")
+	if whereIndex == -1 {
+		return "", nil, fmt.Errorf("failed to extract WHERE clause from query")
+	}
+
+	whereClause := query[whereIndex+6:] // Skip "WHERE "
+
+	return whereClause, params, nil
 }
 
-func toSQLComponent(operand *Value, position string) (interface{}, error) {
+// buildJSONBArrayComparisonExpression builds a JSONB array comparison using PostgreSQL path queries.
+//
+// This handles:
+// 1. Wildcard array queries like $sm#semanticId.keys[].value
+// 2. Submodel element queries like $sme#semanticId.keys[N].value
+//
+// Both use PostgreSQL's JSONB path query operators (@?) to match elements in arrays.
+//
+// Parameters:
+//   - fieldOperand: The field operand containing the array reference
+//   - valueOperand: The value to compare against
+//   - operation: The comparison operator
+//   - _ : unused parameter for API consistency
+//
+// Returns:
+//   - exp.Expression: A JSONB path query expression
+//   - error: An error if the expression cannot be built
+func buildJSONBArrayComparisonExpression(fieldOperand, valueOperand *Value, operation string, _ bool) (exp.Expression, error) {
+	if fieldOperand.Field == nil {
+		return nil, fmt.Errorf("field operand is nil")
+	}
+
+	field := string(*fieldOperand.Field)
+	value := valueOperand.GetValue()
+
+	// Handle $sme# (submodel element) queries
+	if strings.HasPrefix(field, "$sme#") {
+		return buildSubmodelElementJSONBQuery(field, value, operation)
+	}
+
+	// Handle $sm# semantic ID array wildcards
+	var property string
+	switch field {
+	case "$sm#semanticId.keys[].value":
+		property = "value"
+	case "$sm#semanticId.keys[].type":
+		property = "type"
+	default:
+		return nil, fmt.Errorf("unsupported array wildcard field: %s", field)
+	}
+
+	// Build the JSONB path query based on operation
+	var pathQuery string
+	switch operation {
+	case "$eq":
+		pathQuery = fmt.Sprintf("$.keys[*] ? (@.%s == \"%v\")", property, value)
+	case "$ne":
+		// For not equals, we need to check that no element matches
+		pathQuery = fmt.Sprintf("$.keys[*] ? (@.%s != \"%v\")", property, value)
+	case "$gt":
+		pathQuery = fmt.Sprintf("$.keys[*] ? (@.%s > %v)", property, value)
+	case "$ge":
+		pathQuery = fmt.Sprintf("$.keys[*] ? (@.%s >= %v)", property, value)
+	case "$lt":
+		pathQuery = fmt.Sprintf("$.keys[*] ? (@.%s < %v)", property, value)
+	case "$le":
+		pathQuery = fmt.Sprintf("$.keys[*] ? (@.%s <= %v)", property, value)
+	default:
+		return nil, fmt.Errorf("unsupported operation for array comparison: %s", operation)
+	}
+
+	// Return JSONB path exists query: semantic_id @? '$.keys[*] ? (@.value == "x")'
+	// We need to cast the path string to JSONPATH type for PostgreSQL
+	// Use L() with the complete SQL string (no placeholders) since pathQuery is already a complete string
+	return goqu.L(fmt.Sprintf("semantic_id @? '%s'::jsonpath", pathQuery)), nil
+}
+
+// buildSubmodelElementJSONBQuery builds a JSONB path query for submodel element fields.
+//
+// Submodel elements are stored in the submodel_elements JSONB column as an array.
+// This function generates queries to search within that array.
+//
+// Supported fields:
+//   - $sme#semanticId -> shorthand for semanticId.keys[0].value
+//   - $sme#semanticId.keys[N].value -> specific key index
+//   - $sme#semanticId.keys[].value -> wildcard (any key)
+//
+// Parameters:
+//   - field: The submodel element field reference (e.g., "$sme#semanticId.keys[1].value")
+//   - value: The value to compare against
+//   - operation: The comparison operator
+//
+// Returns:
+//   - exp.Expression: A JSONB path query expression
+//   - error: An error if the field format is invalid
+func buildSubmodelElementJSONBQuery(field string, value interface{}, operation string) (exp.Expression, error) {
+	// Parse the field to determine what we're querying
+	var pathQuery string
+
+	if field == "$sme#semanticId" {
+		// Shorthand for semanticId.keys[0].value
+		pathQuery = buildJSONBPathQuery("$[*].semanticId.keys[0].value", value, operation)
+	} else if strings.Contains(field, ".keys[") {
+	} else if field == "$sme#idShort" {
+		// Direct idShort access
+		pathQuery = buildJSONBPathQuery("$[*].idShort", value, operation)
+	} else {
+		return nil, fmt.Errorf("unsupported submodel element field: %s", field)
+	}
+
+	// Return JSONB path exists query
+	return goqu.L(fmt.Sprintf("submodel_elements @? '%s'", pathQuery)), nil
+}
+
+// buildJSONBPathQuery constructs a JSONB path query string with the appropriate operator.
+//
+// Parameters:
+//   - basePath: The base JSONB path (e.g., "$[*].semanticId.keys[0].value")
+//   - value: The value to compare against
+//   - operation: The comparison operator
+//
+// Returns:
+//   - string: The complete JSONB path query
+func buildJSONBPathQuery(basePath string, value interface{}, operation string) string {
+	// For string values, we need to quote them
+	valueStr := fmt.Sprintf("%v", value)
+	if _, ok := value.(string); ok {
+		valueStr = fmt.Sprintf("\"%s\"", value)
+	}
+
+	switch operation {
+	case "$eq":
+		return fmt.Sprintf("%s ? (@ == %s)", basePath, valueStr)
+	case "$ne":
+		return fmt.Sprintf("%s ? (@ != %s)", basePath, valueStr)
+	case "$gt":
+		return fmt.Sprintf("%s ? (@ > %s)", basePath, valueStr)
+	case "$ge":
+		return fmt.Sprintf("%s ? (@ >= %s)", basePath, valueStr)
+	case "$lt":
+		return fmt.Sprintf("%s ? (@ < %s)", basePath, valueStr)
+	case "$le":
+		return fmt.Sprintf("%s ? (@ <= %s)", basePath, valueStr)
+	default:
+		return fmt.Sprintf("%s ? (@ == %s)", basePath, valueStr) // Default to equality
+	}
+}
+
+// toJSONBSQLComponent converts a Value operand to a SQL component using JSONB paths.
+//
+// This function maps field references to their JSONB path expressions for PostgreSQL
+// queries, and wraps literal values appropriately.
+//
+// Parameters:
+//   - operand: The Value to convert
+//   - position: Description of operand position (for error messages)
+//
+// Returns:
+//   - interface{}: Either a goqu identifier/literal for the JSONB path or a value
+//   - error: An error if the operand is invalid
+func toJSONBSQLComponent(operand *Value, position string) (interface{}, error) {
 	if operand.IsField() {
 		if operand.Field == nil {
 			return nil, fmt.Errorf("%s operand is not a valid field", position)
 		}
 		fieldName := string(*operand.Field)
-		fieldName = ParseAASQLFieldToSQLColumn(fieldName)
-		return goqu.I(fieldName), nil
+		jsonbPath, _, isJSONB := ParseAASQLFieldToJSONBPath(fieldName)
+
+		if !isJSONB {
+			// Regular column access
+			return goqu.I(jsonbPath), nil
+		}
+
+		// JSONB path access - return as literal expression (not goqu.L which gets treated as a placeholder)
+		return jsonbPath, nil
 	}
-	return goqu.V(operand.GetValue()), nil
+	return operand.GetValue(), nil
 }
 
 // buildComparisonExpression is a helper function to build comparison expressions
 func buildComparisonExpression(left interface{}, right interface{}, operation string) (exp.Expression, error) {
+	// Check if left operand is a JSONB path string
+	leftStr, leftIsString := left.(string)
+	rightStr, rightIsString := right.(string)
+
+	// Handle JSONB paths (strings that contain JSONB operators)
+	leftIsJSONBPath := leftIsString && (strings.Contains(leftStr, "->") || strings.Contains(leftStr, "@?"))
+	rightIsJSONBPath := rightIsString && (strings.Contains(rightStr, "->") || strings.Contains(rightStr, "@?"))
+
+	var leftExpr, rightExpr interface{}
+
+	if leftIsJSONBPath {
+		// Convert JSONB path string to literal expression
+		leftExpr = goqu.L(leftStr)
+	} else if lit, ok := left.(exp.LiteralExpression); ok {
+		leftExpr = lit
+	} else if ident, ok := left.(exp.IdentifierExpression); ok {
+		leftExpr = ident
+	} else {
+		// It's a value
+		leftExpr = goqu.V(left)
+	}
+
+	if rightIsJSONBPath {
+		// Convert JSONB path string to literal expression
+		rightExpr = goqu.L(rightStr)
+	} else if lit, ok := right.(exp.LiteralExpression); ok {
+		rightExpr = lit
+	} else if ident, ok := right.(exp.IdentifierExpression); ok {
+		rightExpr = ident
+	} else {
+		// It's a value
+		rightExpr = goqu.V(right)
+	}
+
 	switch operation {
 	case "$eq":
-		return exp.NewLiteralExpression("? = ?", left, right), nil
+		return goqu.L("? = ?", leftExpr, rightExpr), nil
 	case "$ne":
-		return exp.NewLiteralExpression("? != ?", left, right), nil
+		return goqu.L("? != ?", leftExpr, rightExpr), nil
 	case "$gt":
-		return exp.NewLiteralExpression("? > ?", left, right), nil
+		return goqu.L("? > ?", leftExpr, rightExpr), nil
 	case "$ge":
-		return exp.NewLiteralExpression("? >= ?", left, right), nil
+		return goqu.L("? >= ?", leftExpr, rightExpr), nil
 	case "$lt":
-		return exp.NewLiteralExpression("? < ?", left, right), nil
+		return goqu.L("? < ?", leftExpr, rightExpr), nil
 	case "$le":
-		return exp.NewLiteralExpression("? <= ?", left, right), nil
+		return goqu.L("? <= ?", leftExpr, rightExpr), nil
 	default:
 		return nil, fmt.Errorf("unsupported comparison operation: %s", operation)
 	}

@@ -1,0 +1,28 @@
+{
+    "Query": {
+        "$condition": {
+            "$and": [
+                {
+                    "$eq": [
+                        {
+                            "$field": "$sme#semanticId"
+                        },
+                        {
+                            "$strVal": "http://opcfoundation.org/UA/DI/1.1/DeviceType/Serialnumber2"
+                        }
+                    ]
+                },
+                {
+                    "$eq": [
+                        {
+                            "$field": "$sme#idShort"
+                        },
+                        {
+                            "$strVal": "TestQuery"
+                        }
+                    ]
+                }
+            ]
+        }
+    }
+}

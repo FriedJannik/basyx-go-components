@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/eclipse-basyx/basyx-go-components/internal/common/model"
+	"github.com/eclipse-basyx/basyx-go-components/internal/common/model/grammar"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -270,6 +271,11 @@ func (c *SubmodelRepositoryAPIAPIController) Routes() Routes {
 			c.contextPath + "/submodels/{submodelIdentifier}/submodel-elements/{idShortPath}/operation-results/{handleId}/$value",
 			c.GetOperationAsyncResultValueOnly,
 		},
+		"QuerySubmodels": Route{
+			strings.ToUpper("Post"),
+			c.contextPath + "/query/submodels",
+			c.QuerySubmodels,
+		},
 	}
 }
 
@@ -335,6 +341,52 @@ func (c *SubmodelRepositoryAPIAPIController) GetAllSubmodels(w http.ResponseWrit
 		extentParam = param
 	}
 	result, err := c.service.GetAllSubmodels(r.Context(), semanticIDParam, idShortParam, limitParam, cursorParam, levelParam, extentParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	_ = EncodeJSONResponse(result.Body, &result.Code, w)
+}
+
+// QuerySubmodels - Returns all Submodels
+func (c *SubmodelRepositoryAPIAPIController) QuerySubmodels(w http.ResponseWriter, r *http.Request) {
+	var queryBody grammar.QueryWrapper
+	d := json.NewDecoder(r.Body)
+	d.DisallowUnknownFields()
+	if err := d.Decode(&queryBody); err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+	query, err := parseQuery(r.URL.RawQuery)
+	if err != nil {
+		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+		return
+	}
+
+	var limitParam int32
+	if query.Has("limit") {
+		param, err := parseNumericParameter[int32](
+			query.Get("limit"),
+			WithParse[int32](parseInt32),
+			WithMinimum[int32](1),
+		)
+		if err != nil {
+			c.errorHandler(w, r, &ParsingError{Param: "limit", Err: err}, nil)
+			return
+		}
+
+		limitParam = param
+	}
+
+	var cursorParam string
+	if query.Has("cursor") {
+		param := query.Get("cursor")
+
+		cursorParam = param
+	}
+	result, err := c.service.QuerySubmodels(r.Context(), queryBody, limitParam, cursorParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

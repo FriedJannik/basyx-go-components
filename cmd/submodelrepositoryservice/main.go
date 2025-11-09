@@ -8,13 +8,14 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
 	"github.com/eclipse-basyx/basyx-go-components/internal/common"
+	"github.com/eclipse-basyx/basyx-go-components/internal/common/model"
 	api "github.com/eclipse-basyx/basyx-go-components/internal/submodelrepository/api"
-	persistencepostgresql "github.com/eclipse-basyx/basyx-go-components/internal/submodelrepository/persistence"
 	openapi "github.com/eclipse-basyx/basyx-go-components/pkg/submodelrepositoryapi/go"
 )
 
@@ -41,13 +42,36 @@ func runServer(ctx context.Context, configPath string, databaseSchema string) er
 
 	// Instantiate generated services & controllers
 	// ==== Submodel Repository Service ====
-	smDatabase, err := persistencepostgresql.NewPostgreSQLSubmodelBackend("postgres://"+config.Postgres.User+":"+config.Postgres.Password+"@"+config.Postgres.Host+":"+strconv.Itoa(config.Postgres.Port)+"/"+config.Postgres.DBName+"?sslmode=disable", config.Postgres.MaxOpenConnections, config.Postgres.MaxIdleConnections, config.Postgres.ConnMaxLifetimeMinutes, config.Server.CacheEnabled, databaseSchema)
+	// Use GORM
+	smDatabase, err := gorm.Open(postgres.New(postgres.Config{
+		DSN:                  "user=postgres password=snoopy2002 dbname=smrepogorm port=5432 sslmode=disable",
+		PreferSimpleProtocol: true, // disables implicit prepared statement usage
+	}), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Failed to initialize database connection: %v", err)
-		return err
+		panic("failed to connect database")
 	}
 
-	smSvc := api.NewSubmodelRepositoryAPIAPIService(*smDatabase)
+	// // Drop tables if they exist (for clean migration) - DO NOT USE IN PRODUCTION
+	// smDatabase.Migrator().DropTable(
+	// 	&model.Extension{},
+	// 	&model.Reference{},
+	// 	&model.Key{},
+	// 	&model.LangStringNameType{},
+	// 	&model.LangStringTextType{},
+	// 	&model.Submodel{},
+	// )
+
+	// Migrate the schema
+	smDatabase.AutoMigrate(
+		&model.Submodel{},
+		&model.Extension{},
+		&model.Reference{},
+		&model.Key{},
+		&model.LangStringNameType{},
+		&model.LangStringTextType{},
+	)
+
+	smSvc := api.NewSubmodelRepositoryAPIAPIService(smDatabase)
 	smCtrl := openapi.NewSubmodelRepositoryAPIAPIController(smSvc, config.Server.ContextPath)
 	for _, rt := range smCtrl.Routes() {
 		r.Method(rt.Method, rt.Pattern, rt.HandlerFunc)

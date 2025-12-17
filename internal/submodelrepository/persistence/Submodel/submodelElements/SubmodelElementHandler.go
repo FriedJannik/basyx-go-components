@@ -436,6 +436,37 @@ func GetSubmodelElementsForSubmodel(db *sql.DB, submodelID string, idShortPath s
 	return res, nextCursor, nil
 }
 
+// DoesSubmodelElementExist checks if a submodel element exists by its submodel ID and idShortPath.
+//
+// Parameters:
+//   - db: Database connection to execute the query
+//   - submodelID: ID of the parent submodel
+//   - idShortPath: Full path of the submodel element to check
+//
+// Returns:
+//   - bool: True if the submodel element exists, false otherwise
+//   - error: An error if the database query fails
+func DoesSubmodelElementExist(db *sql.DB, submodelID string, idShortPath string) (bool, error) {
+	query := goqu.From("submodel_element").Select(goqu.COUNT("*")).Where(
+		goqu.And(
+			goqu.I("submodel_id").Eq(submodelID),
+			goqu.I("idshort_path").Eq(idShortPath),
+		),
+	)
+	sqlQuery, args, err := query.ToSQL()
+	if err != nil {
+		_, _ = fmt.Println("Error while creating SQL Query:", err)
+		return false, common.NewInternalServerError("Error while creating SQL Query. See console for details")
+	}
+	var count int
+	err = db.QueryRow(sqlQuery, args...).Scan(&count)
+	if err != nil {
+		_, _ = fmt.Println("Error while executing SQL Query:", err)
+		return false, common.NewInternalServerError("Error while executing SQL Query. See console for details")
+	}
+	return count > 0, nil
+}
+
 // attachChildrenToSubmodelElements reconstructs the hierarchical structure of submodel elements.
 //
 // This function attaches child elements to their parent containers (SubmodelElementCollection

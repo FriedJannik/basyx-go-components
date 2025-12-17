@@ -134,7 +134,7 @@ func (p PostgreSQLRangeHandler) CreateNested(tx *sql.Tx, submodelID string, pare
 }
 
 // Update modifies an existing Range submodel element in the database.
-// Currently delegates all update operations to the decorated handler for base submodel element properties.
+// It updates both the base submodel element properties and Range-specific data.
 //
 // Parameters:
 //   - idShortOrPath: The idShort or path identifying the element to update
@@ -143,7 +143,47 @@ func (p PostgreSQLRangeHandler) CreateNested(tx *sql.Tx, submodelID string, pare
 // Returns:
 //   - error: An error if the update operation fails
 func (p PostgreSQLRangeHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	rangeElem, ok := submodelElement.(*gen.Range)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type Range")
+	}
+
+	// Update base submodel element first (which starts its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start a new transaction for Range-specific updates
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("range element not found")
+		}
+		return err
+	}
+
+	// Update Range-specific data
+	err = updateRange(rangeElem, tx, elementID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes a Range submodel element from the database.
@@ -204,5 +244,52 @@ func insertRange(rangeElem *gen.Range, tx *sql.Tx, id int) error {
 					 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 		id, rangeElem.ValueType,
 		minText, maxText, minNum, maxNum, minTime, maxTime, minDatetime, maxDatetime)
+	return err
+}
+
+// updateRange is a helper function that updates Range-specific data in the range_element table.
+// It categorizes min and max values into appropriate columns based on the valueType, similar to insertRange.
+//
+// Parameters:
+//   - rangeElem: The Range element containing the data to update
+//   - tx: The database transaction
+//   - id: The database ID of the submodel element
+//
+// Returns:
+//   - error: An error if the database update operation fails
+func updateRange(rangeElem *gen.Range, tx *sql.Tx, id int) error {
+	var minText, maxText, minNum, maxNum, minTime, maxTime, minDatetime, maxDatetime sql.NullString
+
+	switch rangeElem.ValueType {
+	case "xs:string", "xs:anyURI", "xs:base64Binary", "xs:hexBinary":
+		minText = sql.NullString{String: rangeElem.Min, Valid: rangeElem.Min != ""}
+		maxText = sql.NullString{String: rangeElem.Max, Valid: rangeElem.Max != ""}
+	case "xs:int", "xs:integer", "xs:long", "xs:short",
+		"xs:unsignedInt", "xs:unsignedLong", "xs:unsignedShort", "xs:unsignedByte",
+		"xs:positiveInteger", "xs:negativeInteger", "xs:nonNegativeInteger", "xs:nonPositiveInteger",
+		"xs:decimal", "xs:double", "xs:float":
+		minNum = sql.NullString{String: rangeElem.Min, Valid: rangeElem.Min != ""}
+		maxNum = sql.NullString{String: rangeElem.Max, Valid: rangeElem.Max != ""}
+	case "xs:time":
+		minTime = sql.NullString{String: rangeElem.Min, Valid: rangeElem.Min != ""}
+		maxTime = sql.NullString{String: rangeElem.Max, Valid: rangeElem.Max != ""}
+	case "xs:date", "xs:dateTime", "xs:duration", "xs:gDay", "xs:gMonth",
+		"xs:gMonthDay", "xs:gYear", "xs:gYearMonth":
+		minDatetime = sql.NullString{String: rangeElem.Min, Valid: rangeElem.Min != ""}
+		maxDatetime = sql.NullString{String: rangeElem.Max, Valid: rangeElem.Max != ""}
+	default:
+		// Fallback to text
+		minText = sql.NullString{String: rangeElem.Min, Valid: rangeElem.Min != ""}
+		maxText = sql.NullString{String: rangeElem.Max, Valid: rangeElem.Max != ""}
+	}
+
+	// Update Range-specific data
+	_, err := tx.Exec(`UPDATE range_element 
+					   SET value_type = $1, min_text = $2, max_text = $3, min_num = $4, max_num = $5,
+					       min_time = $6, max_time = $7, min_datetime = $8, max_datetime = $9
+					   WHERE id = $10`,
+		rangeElem.ValueType,
+		minText, maxText, minNum, maxNum, minTime, maxTime, minDatetime, maxDatetime,
+		id)
 	return err
 }

@@ -140,8 +140,7 @@ func (p PostgreSQLBlobHandler) CreateNested(tx *sql.Tx, submodelID string, paren
 }
 
 // Update modifies an existing Blob element identified by its idShort or path.
-// This method delegates the update operation to the decorated CRUD handler which handles
-// the common submodel element update logic.
+// It updates both the base submodel element properties and Blob-specific data.
 //
 // Parameters:
 //   - idShortOrPath: idShort or hierarchical path to the element to update
@@ -150,7 +149,48 @@ func (p PostgreSQLBlobHandler) CreateNested(tx *sql.Tx, submodelID string, paren
 // Returns:
 //   - error: Error if update fails
 func (p PostgreSQLBlobHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	blob, ok := submodelElement.(*gen.Blob)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type Blob")
+	}
+
+	// Update base submodel element first (which starts its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start a new transaction for Blob-specific updates
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("blob element not found")
+		}
+		return err
+	}
+
+	// Update Blob-specific data
+	_, err = tx.Exec(`UPDATE blob_element SET content_type = $1, value = $2 WHERE id = $3`,
+		blob.ContentType, []byte(blob.Value), elementID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes a Blob element identified by its idShort or path from the database.

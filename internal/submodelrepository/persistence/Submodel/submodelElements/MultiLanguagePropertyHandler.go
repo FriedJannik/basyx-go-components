@@ -135,7 +135,7 @@ func (p PostgreSQLMultiLanguagePropertyHandler) CreateNested(tx *sql.Tx, submode
 }
 
 // Update modifies an existing MultiLanguageProperty submodel element in the database.
-// Currently delegates all update operations to the decorated handler for base submodel element properties.
+// It updates both the base submodel element properties and MultiLanguageProperty-specific data.
 //
 // Parameters:
 //   - idShortOrPath: The idShort or path identifying the element to update
@@ -144,7 +144,47 @@ func (p PostgreSQLMultiLanguagePropertyHandler) CreateNested(tx *sql.Tx, submode
 // Returns:
 //   - error: An error if the update operation fails
 func (p PostgreSQLMultiLanguagePropertyHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	mlp, ok := submodelElement.(*gen.MultiLanguageProperty)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type MultiLanguageProperty")
+	}
+
+	// Update base submodel element first (which starts its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start a new transaction for MultiLanguageProperty-specific updates
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("multilanguage property element not found")
+		}
+		return err
+	}
+
+	// Update MultiLanguageProperty-specific data
+	err = updateMultiLanguageProperty(mlp, tx, elementID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes a MultiLanguageProperty submodel element from the database.
@@ -179,6 +219,34 @@ func insertMultiLanguageProperty(mlp *gen.MultiLanguageProperty, tx *sql.Tx, id 
 	}
 
 	// Insert values
+	for _, val := range mlp.Value {
+		_, err = tx.Exec(`INSERT INTO multilanguage_property_value (mlp_id, language, text) VALUES ($1, $2, $3)`,
+			id, val.Language, val.Text)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// updateMultiLanguageProperty is a helper function that updates MultiLanguageProperty-specific data.
+// It deletes all existing language-text pairs and inserts the new ones.
+//
+// Parameters:
+//   - mlp: The MultiLanguageProperty element containing the data to update
+//   - tx: The database transaction
+//   - id: The database ID of the submodel element
+//
+// Returns:
+//   - error: An error if the database update operation fails
+func updateMultiLanguageProperty(mlp *gen.MultiLanguageProperty, tx *sql.Tx, id int) error {
+	// Delete existing values
+	_, err := tx.Exec(`DELETE FROM multilanguage_property_value WHERE mlp_id = $1`, id)
+	if err != nil {
+		return err
+	}
+
+	// Insert new values
 	for _, val := range mlp.Value {
 		_, err = tx.Exec(`INSERT INTO multilanguage_property_value (mlp_id, language, text) VALUES ($1, $2, $3)`,
 			id, val.Language, val.Text)

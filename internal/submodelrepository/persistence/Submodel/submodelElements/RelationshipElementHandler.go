@@ -174,9 +174,7 @@ func (p PostgreSQLRelationshipElementHandler) CreateNested(tx *sql.Tx, submodelI
 }
 
 // Update updates an existing RelationshipElement identified by its idShort or path.
-//
-// This method delegates to the decorated handler for update operations. It's currently
-// a pass-through that will leverage base handler update logic when implemented.
+// It updates both the base submodel element properties and RelationshipElement-specific data.
 //
 // Parameters:
 //   - idShortOrPath: The idShort or full path of the element to update
@@ -185,7 +183,67 @@ func (p PostgreSQLRelationshipElementHandler) CreateNested(tx *sql.Tx, submodelI
 // Returns:
 //   - error: An error if the decorated update operation fails
 func (p PostgreSQLRelationshipElementHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	relElem, ok := submodelElement.(*gen.RelationshipElement)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type RelationshipElement")
+	}
+
+	// Update base submodel element first (which starts its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start a new transaction for RelationshipElement-specific updates
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("relationship element not found")
+		}
+		return err
+	}
+
+	// Update RelationshipElement-specific data
+	var firstRef, secondRef string
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+	if !isEmptyReference(relElem.First) {
+		ref, err := json.Marshal(relElem.First)
+		if err != nil {
+			return err
+		}
+		firstRef = string(ref)
+	}
+
+	if !isEmptyReference(relElem.Second) {
+		ref, err := json.Marshal(relElem.Second)
+		if err != nil {
+			return err
+		}
+		secondRef = string(ref)
+	}
+
+	_, err = tx.Exec(`UPDATE relationship_element SET first = $1, second = $2 WHERE id = $3`,
+		firstRef, secondRef, elementID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes a RelationshipElement identified by its idShort or path.

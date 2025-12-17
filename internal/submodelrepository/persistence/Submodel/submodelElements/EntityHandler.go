@@ -131,7 +131,7 @@ func (p PostgreSQLEntityHandler) CreateNested(tx *sql.Tx, submodelID string, par
 }
 
 // Update modifies an existing Entity submodel element in the database.
-// Currently delegates to the decorated handler for base SubmodelElement updates.
+// It updates both the base submodel element properties and Entity-specific data.
 //
 // Parameters:
 //   - idShortOrPath: The idShort or path identifier of the element to update
@@ -140,7 +140,58 @@ func (p PostgreSQLEntityHandler) CreateNested(tx *sql.Tx, submodelID string, par
 // Returns:
 //   - error: Error if the update operation fails
 func (p PostgreSQLEntityHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	entity, ok := submodelElement.(*gen.Entity)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type Entity")
+	}
+
+	// Update base submodel element first (which starts its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start a new transaction for Entity-specific updates
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("entity element not found")
+		}
+		return err
+	}
+
+	// Update Entity-specific data
+	json := jsoniter.ConfigCompatibleWithStandardLibrary
+	specificAssetIDs := "[]"
+	if entity.SpecificAssetIds != nil {
+		specificAssetIDsBytes, err := json.Marshal(entity.SpecificAssetIds)
+		if err != nil {
+			return err
+		}
+		specificAssetIDs = string(specificAssetIDsBytes)
+	}
+
+	_, err = tx.Exec(`UPDATE entity_element SET entity_type = $1, global_asset_id = $2, specific_asset_ids = $3 WHERE id = $4`,
+		entity.EntityType, entity.GlobalAssetID, specificAssetIDs, elementID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes an Entity submodel element from the database.

@@ -193,7 +193,7 @@ func (p PostgreSQLReferenceElementHandler) CreateNested(tx *sql.Tx, submodelID s
 }
 
 // Update modifies an existing ReferenceElement identified by its idShort or full path.
-// This method delegates to the decorated handler which implements the base update logic.
+// It updates both the base submodel element properties and ReferenceElement-specific data.
 //
 // Parameters:
 //   - idShortOrPath: The idShort or full path of the ReferenceElement to update
@@ -201,11 +201,60 @@ func (p PostgreSQLReferenceElementHandler) CreateNested(tx *sql.Tx, submodelID s
 //
 // Returns:
 //   - error: Any error encountered during the update operation
-//
-// Note: This is currently a placeholder that delegates to the decorated handler.
-// Full implementation would include updating the reference value and keys.
 func (p PostgreSQLReferenceElementHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	refElem, ok := submodelElement.(*gen.ReferenceElement)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type ReferenceElement")
+	}
+
+	// Update base submodel element first (which starts its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start a new transaction for ReferenceElement-specific updates
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("reference element not found")
+		}
+		return err
+	}
+
+	// Update ReferenceElement-specific data
+	var referenceJSONString sql.NullString
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	if !isEmptyReference(refElem.Value) {
+		bytes, err := json.Marshal(refElem.Value)
+		if err != nil {
+			return err
+		}
+		referenceJSONString = sql.NullString{String: string(bytes), Valid: true}
+	} else {
+		referenceJSONString = sql.NullString{Valid: false}
+	}
+
+	_, err = tx.Exec(`UPDATE reference_element SET value = $1 WHERE id = $2`, referenceJSONString, elementID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes a ReferenceElement and all its associated data from the database.

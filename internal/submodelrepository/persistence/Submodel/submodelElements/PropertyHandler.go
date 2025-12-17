@@ -139,7 +139,7 @@ func (p PostgreSQLPropertyHandler) CreateNested(tx *sql.Tx, submodelID string, p
 }
 
 // Update modifies an existing Property submodel element in the database.
-// Currently delegates all update operations to the decorated handler for base submodel element properties.
+// It updates both the base submodel element properties and Property-specific data.
 //
 // Parameters:
 //   - idShortOrPath: The idShort or path identifying the element to update
@@ -148,7 +148,47 @@ func (p PostgreSQLPropertyHandler) CreateNested(tx *sql.Tx, submodelID string, p
 // Returns:
 //   - error: An error if the update operation fails
 func (p PostgreSQLPropertyHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	property, ok := submodelElement.(*gen.Property)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type Property")
+	}
+
+	// Update base submodel element first (which starts its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start a new transaction for Property-specific updates
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("property element not found")
+		}
+		return err
+	}
+
+	// Update Property-specific data
+	err = updateProperty(property, tx, elementID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes a Property submodel element from the database.
@@ -223,6 +263,67 @@ func insertProperty(property *gen.Property, tx *sql.Tx, id int) error {
 		valueTime,
 		valueDatetime,
 		valueIDDbID,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// updateProperty is a helper function that updates Property-specific data in the property_element table.
+// It categorizes the property value into appropriate columns based on the valueType, similar to insertProperty.
+//
+// Parameters:
+//   - property: The Property element containing the data to update
+//   - tx: The database transaction
+//   - id: The database ID of the submodel element
+//
+// Returns:
+//   - error: An error if the database update operation fails
+func updateProperty(property *gen.Property, tx *sql.Tx, id int) error {
+	var valueText, valueNum, valueBool, valueTime, valueDatetime sql.NullString
+
+	switch property.ValueType {
+	case "xs:string", "xs:anyURI", "xs:base64Binary", "xs:hexBinary":
+		valueText = sql.NullString{String: property.Value, Valid: property.Value != ""}
+	case "xs:int", "xs:integer", "xs:long", "xs:short", "xs:byte",
+		"xs:unsignedInt", "xs:unsignedLong", "xs:unsignedShort", "xs:unsignedByte",
+		"xs:positiveInteger", "xs:negativeInteger", "xs:nonNegativeInteger", "xs:nonPositiveInteger",
+		"xs:decimal", "xs:double", "xs:float":
+		valueNum = sql.NullString{String: property.Value, Valid: property.Value != ""}
+	case "xs:boolean":
+		valueBool = sql.NullString{String: property.Value, Valid: property.Value != ""}
+	case "xs:time":
+		valueTime = sql.NullString{String: property.Value, Valid: property.Value != ""}
+	case "xs:date", "xs:dateTime", "xs:duration", "xs:gDay", "xs:gMonth",
+		"xs:gMonthDay", "xs:gYear", "xs:gYearMonth":
+		valueDatetime = sql.NullString{String: property.Value, Valid: property.Value != ""}
+	default:
+		// Fallback to text for unknown types
+		valueText = sql.NullString{String: property.Value, Valid: property.Value != ""}
+	}
+
+	// Handle valueID if present
+	valueIDDbID, err := persistenceutils.CreateReference(tx, property.ValueID, sql.NullInt64{}, sql.NullInt64{})
+	if err != nil {
+		_, _ = fmt.Println(err)
+		return common.NewInternalServerError("Failed to create ValueID - no changes applied - see console for details")
+	}
+
+	// Update Property-specific data
+	_, err = tx.Exec(`UPDATE property_element 
+					  SET value_type = $1, value_text = $2, value_num = $3, value_bool = $4, 
+					      value_time = $5, value_datetime = $6, value_id = $7
+					  WHERE id = $8`,
+		property.ValueType,
+		valueText,
+		valueNum,
+		valueBool,
+		valueTime,
+		valueDatetime,
+		valueIDDbID,
+		id,
 	)
 	if err != nil {
 		return err

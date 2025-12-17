@@ -133,8 +133,7 @@ func (p PostgreSQLBasicEventElementHandler) CreateNested(tx *sql.Tx, submodelID 
 }
 
 // Update modifies an existing BasicEventElement identified by its idShort or path.
-// This method delegates the update operation to the decorated CRUD handler which handles
-// the common submodel element update logic.
+// It updates both the base submodel element properties and BasicEventElement-specific data.
 //
 // Parameters:
 //   - idShortOrPath: idShort or hierarchical path to the element to update
@@ -143,7 +142,143 @@ func (p PostgreSQLBasicEventElementHandler) CreateNested(tx *sql.Tx, submodelID 
 // Returns:
 //   - error: Error if update fails
 func (p PostgreSQLBasicEventElementHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	basicEvent, ok := submodelElement.(*gen.BasicEventElement)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type BasicEventElement")
+	}
+
+	// Update base submodel element first (which starts its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start a new transaction for BasicEventElement-specific updates
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("basic event element not found")
+		}
+		return err
+	}
+
+	// Delete old references if they exist
+	var oldObservedRefID, oldMessageBrokerRefID sql.NullInt64
+	err = tx.QueryRow(`SELECT observed_ref, message_broker_ref FROM basic_event_element WHERE id = $1`, elementID).
+		Scan(&oldObservedRefID, &oldMessageBrokerRefID)
+	if err != nil {
+		return err
+	}
+
+	// Delete old reference keys and references
+	if oldObservedRefID.Valid {
+		_, err = tx.Exec(`DELETE FROM reference_key WHERE reference_id = $1`, oldObservedRefID.Int64)
+		if err != nil {
+			return err
+		}
+		_, err = tx.Exec(`DELETE FROM reference WHERE id = $1`, oldObservedRefID.Int64)
+		if err != nil {
+			return err
+		}
+	}
+
+	if oldMessageBrokerRefID.Valid {
+		_, err = tx.Exec(`DELETE FROM reference_key WHERE reference_id = $1`, oldMessageBrokerRefID.Int64)
+		if err != nil {
+			return err
+		}
+		_, err = tx.Exec(`DELETE FROM reference WHERE id = $1`, oldMessageBrokerRefID.Int64)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Insert new references
+	var observedRefID sql.NullInt64
+	if !isEmptyReference(basicEvent.Observed) {
+		var refID int
+		err := tx.QueryRow(`INSERT INTO reference (type) VALUES ($1) RETURNING id`, basicEvent.Observed.Type).Scan(&refID)
+		if err != nil {
+			return err
+		}
+		observedRefID = sql.NullInt64{Int64: int64(refID), Valid: true}
+
+		keys := basicEvent.Observed.Keys
+		for i := range keys {
+			_, err = tx.Exec(`INSERT INTO reference_key (reference_id, position, type, value) VALUES ($1, $2, $3, $4)`,
+				refID, i, keys[i].Type, keys[i].Value)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	var messageBrokerRefID sql.NullInt64
+	if !isEmptyReference(basicEvent.MessageBroker) {
+		var refID int
+		err := tx.QueryRow(`INSERT INTO reference (type) VALUES ($1) RETURNING id`, basicEvent.MessageBroker.Type).Scan(&refID)
+		if err != nil {
+			return err
+		}
+		messageBrokerRefID = sql.NullInt64{Int64: int64(refID), Valid: true}
+
+		keys := basicEvent.MessageBroker.Keys
+		for i := range keys {
+			_, err = tx.Exec(`INSERT INTO reference_key (reference_id, position, type, value) VALUES ($1, $2, $3, $4)`,
+				refID, i, keys[i].Type, keys[i].Value)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Handle nullable fields
+	var lastUpdate sql.NullString
+	if basicEvent.LastUpdate != "" {
+		lastUpdate = sql.NullString{String: basicEvent.LastUpdate, Valid: true}
+	}
+
+	var minInterval sql.NullString
+	if basicEvent.MinInterval != "" {
+		minInterval = sql.NullString{String: basicEvent.MinInterval, Valid: true}
+	}
+
+	var maxInterval sql.NullString
+	if basicEvent.MaxInterval != "" {
+		maxInterval = sql.NullString{String: basicEvent.MaxInterval, Valid: true}
+	}
+
+	var messageTopic sql.NullString
+	if basicEvent.MessageTopic != "" {
+		messageTopic = sql.NullString{String: basicEvent.MessageTopic, Valid: true}
+	}
+
+	// Update BasicEventElement-specific data
+	_, err = tx.Exec(`UPDATE basic_event_element 
+					  SET observed_ref = $1, direction = $2, state = $3, message_topic = $4, 
+					      message_broker_ref = $5, last_update = $6, min_interval = $7, max_interval = $8
+					  WHERE id = $9`,
+		observedRefID, basicEvent.Direction, basicEvent.State, messageTopic,
+		messageBrokerRefID, lastUpdate, minInterval, maxInterval, elementID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Delete removes a BasicEventElement identified by its idShort or path from the database.

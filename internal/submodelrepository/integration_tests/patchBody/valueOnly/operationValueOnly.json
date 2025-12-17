@@ -1,0 +1,9 @@
+{
+  "keys": [
+    {
+      "type": "Submodel",
+      "value": "urn:uuid:updated-operation-reference"
+    }
+  ],
+  "type": "ModelReference"
+}

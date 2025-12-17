@@ -1,0 +1,15 @@
+{
+  "observed": {
+    "keys": [
+      {
+        "type": "Submodel",
+        "value": "https://example.com/updated-observed-element"
+      },
+      {
+        "type": "Property",
+        "value": "ObservedProperty"
+      }
+    ],
+    "type": "ExternalReference"
+  }
+}

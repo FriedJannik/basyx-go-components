@@ -1,0 +1,13 @@
+{
+  "keys": [
+    {
+      "type": "Submodel",
+      "value": "https://example.com/updated-submodel"
+    },
+    {
+      "type": "Property",
+      "value": "UpdatedProperty"
+    }
+  ],
+  "type": "ModelReference"
+}

@@ -1,0 +1,13 @@
+{
+  "entityType": "SelfManagedEntity",
+  "globalAssetId": "urn:uuid:updated-global-asset-id",
+  "specificAssetIds": [
+    {
+      "name": "UpdatedAssetKey",
+      "value": "UpdatedAssetValue"
+    }
+  ],
+  "statements": {
+    "UpdatedStatement": "UpdatedStatementValue"
+  }
+}

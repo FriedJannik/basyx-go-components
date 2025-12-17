@@ -1,0 +1,7 @@
+{
+  "NestedProperty": "UpdatedDeepNestedValue",
+  "NestedRange": {
+    "min": "100.0",
+    "max": "200.0"
+  }
+}

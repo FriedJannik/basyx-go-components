@@ -1,0 +1,7 @@
+{
+  "UpdatedProperty1": "PartiallyUpdatedValue1",
+  "UpdatedProperty2": "UpdatedValue2",
+  "NestedCollection": {
+    "NestedProperty": "NestedValue"
+  }
+}

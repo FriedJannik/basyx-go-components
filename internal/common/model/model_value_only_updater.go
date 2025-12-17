@@ -44,7 +44,7 @@ func ApplyValueOnlyUpdate(element SubmodelElement, valueOnlyData SubmodelElement
 		if !ok {
 			return fmt.Errorf("expected MultiLanguagePropertyValue, got %T", valueOnlyData)
 		}
-		e.Value = []LangStringTextType(mlpValue)
+		e.Value = mlpValue.ToLangStringTextTypeSlice()
 		return nil
 
 	case *Range:
@@ -114,20 +114,8 @@ func ApplyValueOnlyUpdate(element SubmodelElement, valueOnlyData SubmodelElement
 			Keys: areValue.Second.Keys,
 		}
 
-		// Update annotations
-		if areValue.Annotations != nil {
-			// Clear existing annotations and add new ones
-			newAnnotations := make([]SubmodelElement, 0, len(areValue.Annotations))
-			for idShort, annotValue := range areValue.Annotations {
-				// Create a simple Property for each annotation
-				prop := &Property{
-					IdShort: idShort,
-					Value:   fmt.Sprintf("%v", annotValue),
-				}
-				newAnnotations = append(newAnnotations, prop)
-			}
-			e.Annotations = newAnnotations
-		}
+		// Note: Annotations are nested SubmodelElements and will be updated recursively
+		// by the handler's Update method, not here
 		return nil
 
 	case *Entity:
@@ -157,20 +145,8 @@ func ApplyValueOnlyUpdate(element SubmodelElement, valueOnlyData SubmodelElement
 			e.SpecificAssetIds = specificAssetIds
 		}
 
-		// Update statements
-		if entityValue.Statements != nil {
-			// Clear existing statements and add new ones
-			newStatements := make([]SubmodelElement, 0, len(entityValue.Statements))
-			for idShort, stmtValue := range entityValue.Statements {
-				// Create a simple Property for each statement
-				prop := &Property{
-					IdShort: idShort,
-					Value:   fmt.Sprintf("%v", stmtValue),
-				}
-				newStatements = append(newStatements, prop)
-			}
-			e.Statements = newStatements
-		}
+		// Note: Statements are nested SubmodelElements and will be updated recursively
+		// by the handler's Update method, not here
 		return nil
 
 	case *BasicEventElement:

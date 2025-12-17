@@ -872,7 +872,7 @@ func (s *SubmodelRepositoryAPIAPIService) PutSubmodelElementByPathSubmodelRepo(_
 	}
 
 	// Update the submodel element using the backend
-	err = s.submodelBackend.UpdateSubmodelElement(string(decodedSubmodelID), idShortPath, submodelElement)
+	err = s.submodelBackend.UpdateSubmodelElement(string(decodedSubmodelID), idShortPath, submodelElement, false)
 	if err != nil {
 		if common.IsErrNotFound(err) {
 			return gen.Response(http.StatusNotFound, gen.Result{Messages: []gen.Message{{Text: err.Error()}}}), nil
@@ -1229,9 +1229,8 @@ func (s *SubmodelRepositoryAPIAPIService) PatchSubmodelElementByPathValueOnlySub
 					string(timestamp)),
 			}), nil
 	}
-
 	// Update the element in the database
-	err = s.submodelBackend.UpdateSubmodelElement(string(decodedSubmodelIdentifier), idShortPath, element)
+	err = s.submodelBackend.UpdateSubmodelElement(string(decodedSubmodelIdentifier), idShortPath, element, true)
 	if err != nil {
 		if common.IsInternalServerError(err) {
 			timestamp := common.GetCurrentTimestamp()

@@ -1,0 +1,17 @@
+{
+  "entityType": "SelfManagedEntity",
+  "globalAssetId": "urn:uuid:updated-global-asset-id",
+  "specificAssetIds": [
+    {
+      "name": "UpdatedAssetKey",
+      "value": "UpdatedAssetValue"
+    }
+  ],
+  "statements": {
+    "StatementProperty": "UpdatedPropertyValue",
+    "StatementRange": {
+      "min": "5.0",
+      "max": "15.0"
+    }
+  }
+}

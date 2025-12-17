@@ -1162,7 +1162,7 @@ func (p *PostgreSQLSubmodelDatabase) DownloadFileAttachment(submodelID string, i
 }
 
 // UpdateSubmodelElement updates an existing submodel element by its idShortPath.
-func (p *PostgreSQLSubmodelDatabase) UpdateSubmodelElement(submodelID string, idShortPath string, submodelElement gen.SubmodelElement) error {
+func (p *PostgreSQLSubmodelDatabase) UpdateSubmodelElement(submodelID string, idShortPath string, submodelElement gen.SubmodelElement, isValueOnly bool) error {
 	// Get the model type to determine which handler to use
 	var modelType string
 	err := p.db.QueryRow(`SELECT model_type FROM submodel_element WHERE submodel_id = $1 AND idshort_path = $2`, submodelID, idShortPath).Scan(&modelType)
@@ -1177,6 +1177,19 @@ func (p *PostgreSQLSubmodelDatabase) UpdateSubmodelElement(submodelID string, id
 	handler, err := submodelelements.GetSMEHandlerByModelType(modelType, p.db)
 	if err != nil {
 		return fmt.Errorf("failed to get handler for model type %s: %w", modelType, err)
+	}
+
+	// if isValueOnly and is File SME , handle file update separately
+	if isValueOnly && modelType == "File" {
+		fileHandler, ok := handler.(*submodelelements.PostgreSQLFileHandler)
+		if !ok {
+			return fmt.Errorf("handler is not of type PostgreSQLFileHandler")
+		}
+		fileElement, ok := submodelElement.(*gen.File)
+		if !ok {
+			return fmt.Errorf("submodelElement is not of type File")
+		}
+		return fileHandler.UpdateValueOnly(submodelID, idShortPath, *fileElement)
 	}
 
 	// Update the element

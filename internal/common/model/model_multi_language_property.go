@@ -166,6 +166,17 @@ func (a *MultiLanguageProperty) SetEmbeddedDataSpecifications(v []EmbeddedDataSp
 	a.EmbeddedDataSpecifications = v
 }
 
+func (a *MultiLanguageProperty) ToValueOnly() MultiLanguagePropertyValue {
+	result := make(MultiLanguagePropertyValue, 0, len(a.Value))
+	for _, lst := range a.Value {
+		langMap := map[string]string{
+			lst.Language: lst.Text,
+		}
+		result = append(result, langMap)
+	}
+	return result
+}
+
 // AssertMultiLanguagePropertyRequired checks if the required fields are not zero-ed
 func AssertMultiLanguagePropertyRequired(obj MultiLanguageProperty) error {
 	elements := map[string]interface{}{

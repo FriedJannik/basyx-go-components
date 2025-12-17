@@ -131,7 +131,9 @@ func (p PostgreSQLSubmodelElementListHandler) CreateNested(tx *sql.Tx, submodelI
 }
 
 // Update modifies an existing SubmodelElementList submodel element in the database.
-// Currently delegates to the decorated handler for base SubmodelElement updates.
+// This method updates both the common submodel element properties and the list-specific
+// properties, and recursively updates all nested elements within the list. Value-only updates
+// only modify existing elements, they do not create new elements or delete missing ones.
 //
 // Parameters:
 //   - idShortOrPath: The idShort or path identifier of the element to update
@@ -140,7 +142,62 @@ func (p PostgreSQLSubmodelElementListHandler) CreateNested(tx *sql.Tx, submodelI
 // Returns:
 //   - error: Error if the update operation fails
 func (p PostgreSQLSubmodelElementListHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	smeList, ok := submodelElement.(*gen.SubmodelElementList)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type SubmodelElementList")
+	}
+
+	// First, update base SubmodelElement (uses its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start new transaction for list-specific properties update
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		return err
+	}
+
+	// Update list-specific properties
+	err = updateSubmodelElementList(smeList, tx, elementID)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	// Recursively update each nested element (no creation/deletion for value-only updates)
+	if smeList.Value != nil {
+		for i, nestedElem := range smeList.Value {
+			handler, err := GetSMEHandlerByModelType(string(nestedElem.GetModelType()), p.db)
+			if err != nil {
+				return err
+			}
+			nestedPath := idShortOrPath + "[" + string(rune(i)) + "]"
+			err = handler.Update(nestedPath, nestedElem)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // Delete removes a SubmodelElementList submodel element from the database.
@@ -177,5 +234,42 @@ func insertSubmodelElementList(smeList *gen.SubmodelElementList, tx *sql.Tx, id 
 	_, err := tx.Exec(`INSERT INTO submodel_element_list (id, order_relevant, semantic_id_list_element, type_value_list_element, value_type_list_element)
 					 VALUES ($1, $2, $3, $4, $5)`,
 		id, smeList.OrderRelevant, semanticID, typeValue, valueType)
+	return err
+}
+
+func updateSubmodelElementList(smeList *gen.SubmodelElementList, tx *sql.Tx, id int) error {
+	// Delete old semantic reference if exists
+	var oldSemanticID sql.NullInt64
+	err := tx.QueryRow(`SELECT semantic_id_list_element FROM submodel_element_list WHERE id = $1`, id).Scan(&oldSemanticID)
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+	if oldSemanticID.Valid {
+		_, err = tx.Exec(`DELETE FROM reference WHERE id = $1`, oldSemanticID.Int64)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Insert new semantic reference if provided
+	var semanticID sql.NullInt64
+	if smeList.SemanticIdListElement != nil && !isEmptyReference(smeList.SemanticIdListElement) {
+		refID, err := insertReference(tx, *smeList.SemanticIdListElement)
+		if err != nil {
+			return err
+		}
+		semanticID = sql.NullInt64{Int64: int64(refID), Valid: true}
+	}
+
+	var typeValue, valueType sql.NullString
+	if smeList.TypeValueListElement != nil {
+		typeValue = sql.NullString{String: string(*smeList.TypeValueListElement), Valid: true}
+	}
+	if smeList.ValueTypeListElement != "" {
+		valueType = sql.NullString{String: string(smeList.ValueTypeListElement), Valid: true}
+	}
+
+	_, err = tx.Exec(`UPDATE submodel_element_list SET order_relevant = $1, semantic_id_list_element = $2, type_value_list_element = $3, value_type_list_element = $4 WHERE id = $5`,
+		smeList.OrderRelevant, semanticID, typeValue, valueType, id)
 	return err
 }

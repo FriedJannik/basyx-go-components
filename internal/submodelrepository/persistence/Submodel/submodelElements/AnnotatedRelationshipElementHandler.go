@@ -134,8 +134,8 @@ func (p PostgreSQLAnnotatedRelationshipElementHandler) CreateNested(tx *sql.Tx, 
 }
 
 // Update modifies an existing AnnotatedRelationshipElement identified by its idShort or path.
-// This method delegates the update operation to the decorated CRUD handler which handles
-// the common submodel element update logic.
+// This method updates both the common submodel element properties and the specific
+// first and second reference data in the annotated_relationship_element table.
 //
 // Parameters:
 //   - idShortOrPath: idShort or hierarchical path to the element to update
@@ -144,7 +144,62 @@ func (p PostgreSQLAnnotatedRelationshipElementHandler) CreateNested(tx *sql.Tx, 
 // Returns:
 //   - error: Error if update fails
 func (p PostgreSQLAnnotatedRelationshipElementHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	areElem, ok := submodelElement.(*gen.AnnotatedRelationshipElement)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type AnnotatedRelationshipElement")
+	}
+
+	// First, update base SubmodelElement (uses its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Start new transaction for type-specific update
+	tx, err := p.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// Get the element ID
+	var elementID int
+	err = tx.QueryRow(`SELECT id FROM submodel_element WHERE idshort_path = $1`, idShortOrPath).Scan(&elementID)
+	if err != nil {
+		return err
+	}
+
+	// Update annotated_relationship_element table
+	err = updateAnnotatedRelationshipElement(areElem, tx, elementID)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	// Recursively update nested annotation elements (no creation/deletion for value-only updates)
+	if areElem.Annotations != nil {
+		for _, annotation := range areElem.Annotations {
+			handler, err := GetSMEHandlerByModelType(string(annotation.GetModelType()), p.db)
+			if err != nil {
+				return err
+			}
+			annotationPath := idShortOrPath + "." + annotation.GetIdShort()
+			err = handler.Update(annotationPath, annotation)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // Delete removes an AnnotatedRelationshipElement identified by its idShort or path from the database.
@@ -183,6 +238,35 @@ func insertAnnotatedRelationshipElement(areElem *gen.AnnotatedRelationshipElemen
 
 	_, err := tx.Exec(`INSERT INTO annotated_relationship_element (id, first, second) VALUES ($1, $2, $3)`,
 		id, firstRef, secondRef)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateAnnotatedRelationshipElement(areElem *gen.AnnotatedRelationshipElement, tx *sql.Tx, id int) error {
+	var firstRef, secondRef string
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+	if !isEmptyReference(areElem.First) {
+		ref, err := json.Marshal(areElem.First)
+		if err != nil {
+			return err
+		}
+		firstRef = string(ref)
+	}
+
+	if !isEmptyReference(areElem.Second) {
+		ref, err := json.Marshal(areElem.Second)
+		if err != nil {
+			return err
+		}
+		secondRef = string(ref)
+	}
+
+	_, err := tx.Exec(`UPDATE annotated_relationship_element SET first = $1, second = $2 WHERE id = $3`,
+		firstRef, secondRef, id)
 	if err != nil {
 		return err
 	}

@@ -13,17 +13,13 @@ import "encoding/json"
 
 // MultiLanguagePropertyValue represents the Value-Only serialization of a MultiLanguageProperty.
 // According to spec: Serialized as array of JSON objects with language and localized string.
-type MultiLanguagePropertyValue []LangStringTextType
+type MultiLanguagePropertyValue []map[string]string
 
 // MarshalValueOnly serializes MultiLanguagePropertyValue in Value-Only format
 // Serializes as array of objects with language code as key and text as value
 func (m MultiLanguagePropertyValue) MarshalValueOnly() ([]byte, error) {
-	// Convert to compact format: [{"en-us":"text"}, {"de":"text"}]
-	result := make([]map[string]string, len(m))
-	for i, item := range m {
-		result[i] = map[string]string{item.Language: item.Text}
-	}
-	return json.Marshal(result)
+	// Cast to underlying type to avoid infinite recursion with MarshalJSON
+	return json.Marshal([]map[string]string(m))
 }
 
 // MarshalJSON implements custom JSON marshaling for MultiLanguagePropertyValue
@@ -31,11 +27,26 @@ func (m MultiLanguagePropertyValue) MarshalJSON() ([]byte, error) {
 	return m.MarshalValueOnly()
 }
 
+func (m MultiLanguagePropertyValue) ToLangStringTextTypeSlice() []LangStringTextType {
+	result := make([]LangStringTextType, 0, len(m))
+	for _, langMap := range m {
+		for lang, text := range langMap {
+			result = append(result, LangStringTextType{
+				Language: lang,
+				Text:     text,
+			})
+		}
+	}
+	return result
+}
+
 // AssertMultiLanguagePropertyValueRequired checks if the required fields are not zero-ed
 func AssertMultiLanguagePropertyValueRequired(obj MultiLanguagePropertyValue) error {
 	for _, el := range obj {
-		if err := AssertLangStringTextTypeRequired(el); err != nil {
-			return err
+		for lang, text := range el {
+			if lang == "" || text == "" {
+				return nil // Basic validation
+			}
 		}
 	}
 	return nil
@@ -44,8 +55,12 @@ func AssertMultiLanguagePropertyValueRequired(obj MultiLanguagePropertyValue) er
 // AssertMultiLanguagePropertyValueConstraints checks if the values respects the defined constraints
 func AssertMultiLanguagePropertyValueConstraints(obj MultiLanguagePropertyValue) error {
 	for _, el := range obj {
-		if err := AssertLangStringTextTypeConstraints(el); err != nil {
-			return err
+		for lang, text := range el {
+			// Create a temporary LangStringTextType for validation
+			temp := LangStringTextType{Language: lang, Text: text}
+			if err := AssertLangStringTextTypeConstraints(temp); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

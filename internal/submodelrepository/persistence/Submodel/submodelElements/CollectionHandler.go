@@ -133,8 +133,9 @@ func (p PostgreSQLSubmodelElementCollectionHandler) CreateNested(tx *sql.Tx, sub
 }
 
 // Update modifies an existing SubmodelElementCollection identified by its idShort or path.
-// This method delegates the update operation to the decorated CRUD handler which handles
-// the common submodel element update logic.
+// This method updates both the common submodel element properties and recursively updates
+// all nested elements within the collection. Value-only updates only modify existing elements,
+// they do not create new elements or delete missing ones.
 //
 // Parameters:
 //   - idShortOrPath: idShort or hierarchical path to the collection to update
@@ -143,7 +144,33 @@ func (p PostgreSQLSubmodelElementCollectionHandler) CreateNested(tx *sql.Tx, sub
 // Returns:
 //   - error: Error if update fails
 func (p PostgreSQLSubmodelElementCollectionHandler) Update(idShortOrPath string, submodelElement gen.SubmodelElement) error {
-	return p.decorated.Update(idShortOrPath, submodelElement)
+	collection, ok := submodelElement.(*gen.SubmodelElementCollection)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type SubmodelElementCollection")
+	}
+
+	// First, update base SubmodelElement (uses its own transaction)
+	err := p.decorated.Update(idShortOrPath, submodelElement)
+	if err != nil {
+		return err
+	}
+
+	// Recursively update each nested element (no creation/deletion for value-only updates)
+	if collection.Value != nil {
+		for _, nestedElem := range collection.Value {
+			handler, err := GetSMEHandlerByModelType(string(nestedElem.GetModelType()), p.db)
+			if err != nil {
+				return err
+			}
+			nestedPath := idShortOrPath + "." + nestedElem.GetIdShort()
+			err = handler.Update(nestedPath, nestedElem)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 // Delete removes a SubmodelElementCollection identified by its idShort or path from the database.

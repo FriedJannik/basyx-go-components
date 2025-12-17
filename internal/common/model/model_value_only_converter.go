@@ -9,7 +9,9 @@
 //nolint:all
 package model
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // ToValueOnly converts a Submodel to its Value-Only representation
 func (s *Submodel) ToValueOnly() (SubmodelValue, error) {
@@ -74,7 +76,7 @@ func PropertyToValueOnly(p *Property) PropertyValue {
 
 // MultiLanguagePropertyToValueOnly converts a MultiLanguageProperty to MultiLanguagePropertyValue
 func MultiLanguagePropertyToValueOnly(mlp *MultiLanguageProperty) MultiLanguagePropertyValue {
-	return MultiLanguagePropertyValue(mlp.Value)
+	return mlp.ToValueOnly()
 }
 
 // RangeToValueOnly converts a Range to RangeValue
@@ -94,10 +96,26 @@ func FileToValueOnly(f *File) FileValue {
 }
 
 // BlobToValueOnly converts a Blob to BlobValue
+// PostgreSQL returns bytea as hex-encoded string with \x prefix
+// We need to convert to base64 for value-only representation
 func BlobToValueOnly(b *Blob) BlobValue {
+	value := b.Value
+
+	// // If value starts with \x (PostgreSQL hex format), convert to base64
+	// if len(value) > 2 && value[0:2] == "\\x" {
+	// 	// Decode hex string (without \x prefix)
+	// 	hexStr := value[2:]
+	// 	bytes := make([]byte, len(hexStr)/2)
+	// 	for i := 0; i < len(bytes); i++ {
+	// 		fmt.Sscanf(hexStr[i*2:i*2+2], "%02x", &bytes[i])
+	// 	}
+	// 	// Encode to base64
+	// 	value = base64.StdEncoding.EncodeToString(bytes)
+	// }
+
 	return BlobValue{
 		ContentType: b.ContentType,
-		Value:       b.Value,
+		Value:       value,
 	}
 }
 

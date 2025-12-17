@@ -138,6 +138,54 @@ func (p PostgreSQLFileHandler) CreateNested(tx *sql.Tx, submodelID string, paren
 	return id, nil
 }
 
+func (p PostgreSQLFileHandler) UpdateValueOnly(submodelId string, idShortOrPath string, fileValue gen.File) error {
+	tx, err := p.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		} else {
+			_ = tx.Commit()
+		}
+	}()
+
+	// First get submodel element db id via idShortOrPath and submodelId from submodel_element table
+	var elementID int64
+	query, args, err := goqu.Dialect("postgres").From("submodel_element").
+		Select("id").
+		Where(goqu.C("idshort_path").Eq(idShortOrPath), goqu.C("submodel_id").Eq(submodelId)).
+		ToSQL()
+	if err != nil {
+		return fmt.Errorf("failed to build query: %w", err)
+	}
+	err = tx.QueryRow(query, args...).Scan(&elementID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return common.NewErrNotFound("file element not found")
+		}
+		return fmt.Errorf("failed to get file element id: %w", err)
+	}
+
+	// Update the file_element with the new value and content type
+	updateQuery, updateArgs, err := goqu.Dialect("postgres").Update("file_element").
+		Set(goqu.Record{
+			"value":        fileValue.Value,
+			"content_type": fileValue.ContentType,
+		}).
+		Where(goqu.C("id").Eq(elementID)).
+		ToSQL()
+	if err != nil {
+		return fmt.Errorf("failed to build update query: %w", err)
+	}
+	_, err = tx.Exec(updateQuery, updateArgs...)
+	if err != nil {
+		return fmt.Errorf("failed to update file_element: %w", err)
+	}
+	return nil
+}
+
 // Update modifies an existing File submodel element in the database.
 // If the file value is changed and an OID exists, the old Large Object is deleted.
 //

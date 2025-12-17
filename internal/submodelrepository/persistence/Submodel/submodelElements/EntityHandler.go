@@ -191,6 +191,27 @@ func (p PostgreSQLEntityHandler) Update(idShortOrPath string, submodelElement ge
 		return err
 	}
 
+	// Commit the transaction
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	// Recursively update nested statement elements (no creation/deletion for value-only updates)
+	if entity.Statements != nil {
+		for _, statement := range entity.Statements {
+			handler, err := GetSMEHandlerByModelType(string(statement.GetModelType()), p.db)
+			if err != nil {
+				return err
+			}
+			statementPath := idShortOrPath + "." + statement.GetIdShort()
+			err = handler.Update(statementPath, statement)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 

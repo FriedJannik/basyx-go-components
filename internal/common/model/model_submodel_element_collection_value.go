@@ -36,6 +36,20 @@ func (s SubmodelElementCollectionValue) MarshalJSON() ([]byte, error) {
 	return s.MarshalValueOnly()
 }
 
+// UnmarshalJSON implements custom JSON unmarshaling for SubmodelElementCollectionValue
+// For value-only representation, child values are wrapped in RawValueOnlyData
+func (s *SubmodelElementCollectionValue) UnmarshalJSON(data []byte) error {
+	var rawMap map[string]interface{}
+	if err := json.Unmarshal(data, &rawMap); err != nil {
+		return err
+	}
+	*s = make(SubmodelElementCollectionValue)
+	for key, val := range rawMap {
+		(*s)[key] = NewRawValueOnlyData(val)
+	}
+	return nil
+}
+
 // AssertSubmodelElementCollectionValueRequired checks if the required fields are not zero-ed
 func AssertSubmodelElementCollectionValueRequired(_ SubmodelElementCollectionValue) error {
 	// Collection itself is optional, individual elements are validated by their own types

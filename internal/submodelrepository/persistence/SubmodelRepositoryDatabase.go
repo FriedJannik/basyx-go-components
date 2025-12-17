@@ -356,6 +356,11 @@ func (p *PostgreSQLSubmodelDatabase) DoesSubmodelExist(submodelIdentifier string
 	return count > 0, nil
 }
 
+func (p *PostgreSQLSubmodelDatabase) DoesSubmodelElementExist(submodelID string, idShortOrPath string) (bool, error) {
+	exists, err := submodelelements.DoesSubmodelElementExist(p.db, submodelID, idShortOrPath)
+	return exists, err
+}
+
 // GetSubmodel retrieves a complete submodel by its ID.
 // This method returns the full submodel including all its submodel elements and metadata.
 //

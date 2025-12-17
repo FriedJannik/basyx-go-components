@@ -36,6 +36,20 @@ func (s SubmodelElementListValue) MarshalJSON() ([]byte, error) {
 	return s.MarshalValueOnly()
 }
 
+// UnmarshalJSON implements custom JSON unmarshaling for SubmodelElementListValue
+// For value-only representation, child values are wrapped in RawValueOnlyData
+func (s *SubmodelElementListValue) UnmarshalJSON(data []byte) error {
+	var rawArray []interface{}
+	if err := json.Unmarshal(data, &rawArray); err != nil {
+		return err
+	}
+	*s = make(SubmodelElementListValue, len(rawArray))
+	for i, val := range rawArray {
+		(*s)[i] = NewRawValueOnlyData(val)
+	}
+	return nil
+}
+
 // AssertSubmodelElementListValueRequired checks if the required fields are not zero-ed
 func AssertSubmodelElementListValueRequired(_ SubmodelElementListValue) error {
 	// List itself is optional, individual elements are validated by their own types

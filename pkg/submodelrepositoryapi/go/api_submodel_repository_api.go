@@ -1592,17 +1592,19 @@ func (c *SubmodelRepositoryAPIAPIController) PatchSubmodelElementByPathValueOnly
 		c.errorHandler(w, r, &RequiredError{"idShortPath"}, nil)
 		return
 	}
-	// SubmodelElementValue is an interface, deserialize from JSON
+	// For value-only PATCH, unmarshal as raw interface{} since we don't have modelType discriminator
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
-	submodelElementValueParam, err := model.UnmarshalSubmodelElementValue(body)
-	if err != nil {
+	var rawValue interface{}
+	if err := json.Unmarshal(body, &rawValue); err != nil {
 		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
 		return
 	}
+	// Wrap raw value in a type that implements SubmodelElementValue interface
+	submodelElementValueParam := model.NewRawValueOnlyData(rawValue)
 	var levelParam string
 	if query.Has("level") {
 		param := query.Get("level")

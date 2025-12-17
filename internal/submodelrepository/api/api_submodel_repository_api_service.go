@@ -16,6 +16,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -1105,31 +1106,275 @@ func (s *SubmodelRepositoryAPIAPIService) GetSubmodelElementByPathValueOnlySubmo
 //
 //nolint:revive
 func (s *SubmodelRepositoryAPIAPIService) PatchSubmodelElementByPathValueOnlySubmodelRepo(ctx context.Context, submodelIdentifier string, idShortPath string, submodelElementValue gen.SubmodelElementValue, level string) (gen.ImplResponse, error) {
-	// TODO - update PatchSubmodelElementByPathValueOnlySubmodelRepo with the required logic for this service method.
-	// Add api_submodel_repository_api_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	timestamp := common.GetCurrentTimestamp()
+	decodedSubmodelIdentifier, decodeErr := base64.RawStdEncoding.DecodeString(submodelIdentifier)
+	if decodeErr != nil {
+		return gen.Response(http.StatusBadRequest, []common.ErrorHandler{
+			*common.NewErrorHandler(
+				"Error",
+				decodeErr,
+				"400",
+				"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-400-BadRequest",
+				string(timestamp)),
+		}), decodeErr
+	}
+	exists, err := s.submodelBackend.DoesSubmodelElementExist(string(decodedSubmodelIdentifier), idShortPath)
+	if err != nil {
+		if common.IsInternalServerError(err) {
+			return gen.Response(
+				http.StatusInternalServerError,
+				[]common.ErrorHandler{
+					*common.NewErrorHandler(
+						"Error",
+						err,
+						"500",
+						"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-500-InternalServerError",
+						string(timestamp)),
+				}), nil
+		}
+		return gen.Response(
+			http.StatusInternalServerError,
+			[]common.ErrorHandler{
+				*common.NewErrorHandler(
+					"Error",
+					errors.New("an unexpecte error happened while checking if submodel element exists"),
+					"500",
+					"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-500-InternalServerError-UNDEF",
+					string(timestamp)),
+			}), nil
 
-	// TODO: Uncomment the next line to return response Response(204, {}) or use other options such as http.Ok ...
-	// return gen.Response(204, nil),nil
+	}
+	if !exists {
+		timestamp := common.GetCurrentTimestamp()
+		return gen.Response(
+			http.StatusNotFound,
+			[]common.ErrorHandler{
+				*common.NewErrorHandler("Error", common.NewErrNotFound(fmt.Sprintf("Submodel Element in Submodel '%s' with idShortPath '%s' not found.", string(decodedSubmodelIdentifier), idShortPath)),
+					"404",
+					"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-404-NotFound",
+					string(timestamp)),
+			}), nil
+	}
 
-	// TODO: Uncomment the next line to return response Response(400, Result{}) or use other options such as http.Ok ...
-	// return gen.Response(400, Result{}), nil
+	// Get the existing submodel element
+	element, err := s.submodelBackend.GetSubmodelElement(string(decodedSubmodelIdentifier), idShortPath, true)
+	if err != nil {
+		if common.IsInternalServerError(err) {
+			timestamp := common.GetCurrentTimestamp()
+			return gen.Response(
+				http.StatusInternalServerError,
+				[]common.ErrorHandler{
+					*common.NewErrorHandler(
+						"Error",
+						err,
+						"500",
+						"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-500-InternalServerError-GetElement",
+						string(timestamp)),
+				}), nil
+		}
+		if common.IsErrNotFound(err) {
+			timestamp := common.GetCurrentTimestamp()
+			return gen.Response(
+				http.StatusNotFound,
+				[]common.ErrorHandler{
+					*common.NewErrorHandler(
+						"Error",
+						err,
+						"404",
+						"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-404-NotFound-GetElement",
+						string(timestamp)),
+				}), nil
+		}
+		timestamp := common.GetCurrentTimestamp()
+		return gen.Response(
+			http.StatusInternalServerError,
+			[]common.ErrorHandler{
+				*common.NewErrorHandler(
+					"Error",
+					errors.New("an unexpected error happened while fetching submodel element"),
+					"500",
+					"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-500-InternalServerError-UNDEF",
+					string(timestamp)),
+			}), nil
+	}
 
-	// TODO: Uncomment the next line to return response Response(401, Result{}) or use other options such as http.Ok ...
-	// return gen.Response(401, Result{}), nil
+	// Extract raw data and convert to appropriate type based on element's ModelType
+	valueOnlyData, err := s.convertToTypedValueOnlyData(element, submodelElementValue)
+	if err != nil {
+		timestamp := common.GetCurrentTimestamp()
+		return gen.Response(
+			http.StatusBadRequest,
+			[]common.ErrorHandler{
+				*common.NewErrorHandler(
+					"Error",
+					err,
+					"400",
+					"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-400-InvalidValue",
+					string(timestamp)),
+			}), nil
+	}
 
-	// TODO: Uncomment the next line to return response Response(403, Result{}) or use other options such as http.Ok ...
-	// return gen.Response(403, Result{}), nil
+	// Apply the value-only update to the element
+	err = gen.ApplyValueOnlyUpdate(element, valueOnlyData)
+	if err != nil {
+		timestamp := common.GetCurrentTimestamp()
+		return gen.Response(
+			http.StatusBadRequest,
+			[]common.ErrorHandler{
+				*common.NewErrorHandler(
+					"Error",
+					err,
+					"400",
+					"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-400-InvalidValueUpdate",
+					string(timestamp)),
+			}), nil
+	}
 
-	// TODO: Uncomment the next line to return response Response(404, Result{}) or use other options such as http.Ok ...
-	// return gen.Response(404, Result{}), nil
+	// Update the element in the database
+	err = s.submodelBackend.UpdateSubmodelElement(string(decodedSubmodelIdentifier), idShortPath, element)
+	if err != nil {
+		if common.IsInternalServerError(err) {
+			timestamp := common.GetCurrentTimestamp()
+			return gen.Response(
+				http.StatusInternalServerError,
+				[]common.ErrorHandler{
+					*common.NewErrorHandler(
+						"Error",
+						err,
+						"500",
+						"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-500-InternalServerError-UpdateElement",
+						string(timestamp)),
+				}), nil
+		}
+		timestamp := common.GetCurrentTimestamp()
+		return gen.Response(
+			http.StatusInternalServerError,
+			[]common.ErrorHandler{
+				*common.NewErrorHandler(
+					"Error",
+					errors.New("an unexpected error happened while updating submodel element"),
+					"500",
+					"SMREPO-PatchSubmodelElementByPathValueOnlySubmodelRepo-500-InternalServerError-Update-UNDEF",
+					string(timestamp)),
+			}), nil
+	}
 
-	// TODO: Uncomment the next line to return response Response(500, Result{}) or use other options such as http.Ok ...
-	// return gen.Response(500, Result{}), nil
+	return gen.Response(http.StatusNoContent, nil), nil
+}
 
-	// TODO: Uncomment the next line to return response Response(0, Result{}) or use other options such as http.Ok ...
-	// return gen.Response(0, Result{}), nil
+// convertToTypedValueOnlyData converts raw value-only data into the appropriate *Value type based on the element's ModelType
+func (s *SubmodelRepositoryAPIAPIService) convertToTypedValueOnlyData(element gen.SubmodelElement, valueOnlyData gen.SubmodelElementValue) (gen.SubmodelElementValue, error) {
+	// Extract raw data from wrapper
+	rawData, ok := valueOnlyData.(gen.RawValueOnlyData)
+	if !ok {
+		return nil, fmt.Errorf("expected RawValueOnlyData wrapper, got %T", valueOnlyData)
+	}
 
-	return gen.Response(http.StatusNotImplemented, nil), errors.New("PatchSubmodelElementByPathValueOnlySubmodelRepo method not implemented")
+	// Re-marshal and unmarshal into the correct type based on element's ModelType
+	jsonData, err := json.Marshal(rawData.GetRawValue())
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal raw value: %w", err)
+	}
+	switch element.GetModelType() {
+	case "Property":
+		var value gen.PropertyValue
+		// Property value-only is just a string
+		if err := json.Unmarshal(jsonData, &value.Value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal Property value-only: %w", err)
+		}
+		return value, nil
+
+	case "MultiLanguageProperty":
+		var value gen.MultiLanguagePropertyValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal MultiLanguageProperty value-only: %w", err)
+		}
+		return value, nil
+
+	case "Range":
+		var value gen.RangeValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal Range value-only: %w", err)
+		}
+		return value, nil
+
+	case "Blob":
+		var value gen.BlobValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal Blob value-only: %w", err)
+		}
+		return value, nil
+
+	case "File":
+		var value gen.FileValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal File value-only: %w", err)
+		}
+		return value, nil
+
+	case "ReferenceElement":
+		var value gen.ReferenceElementValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal ReferenceElement value-only: %w", err)
+		}
+		return value, nil
+
+	case "RelationshipElement":
+		var value gen.RelationshipElementValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal RelationshipElement value-only: %w", err)
+		}
+		return value, nil
+
+	case "AnnotatedRelationshipElement":
+		var value gen.AnnotatedRelationshipElementValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal AnnotatedRelationshipElement value-only: %w", err)
+		}
+		return value, nil
+
+	case "Entity":
+		var value gen.EntityValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal Entity value-only: %w", err)
+		}
+		return value, nil
+
+	case "BasicEventElement":
+		var value gen.BasicEventElementValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal BasicEventElement value-only: %w", err)
+		}
+		return value, nil
+
+	case "SubmodelElementCollection":
+		// SubmodelElementCollection is map[string]SubmodelElementValue
+		// For nested structures, keep values as interface{} since ApplyValueOnlyUpdate handles recursion
+		var value gen.SubmodelElementCollectionValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal SubmodelElementCollection value-only: %w", err)
+		}
+		return value, nil
+
+	case "SubmodelElementList":
+		// SubmodelElementList is []SubmodelElementValue
+		// For nested structures, keep values as interface{} since ApplyValueOnlyUpdate handles recursion
+		var value gen.SubmodelElementListValue
+		if err := json.Unmarshal(jsonData, &value); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal SubmodelElementList value-only: %w", err)
+		}
+		return value, nil
+
+	case "Operation":
+		return nil, fmt.Errorf("operations cannot be updated via value-only representation")
+
+	case "Capability":
+		// Capabilities have no value in value-only representation
+		return nil, fmt.Errorf("capabilities have no value in value-only representation")
+
+	default:
+		return nil, fmt.Errorf("unsupported element type for value-only update: %s", element.GetModelType())
+	}
 }
 
 // GetSubmodelElementByPathReferenceSubmodelRepo - Returns the Referee of a specific submodel element from the Submodel at a specified path

@@ -40,3 +40,4 @@ debug.test.*
 
 # JetBrains IDEs
 .idea
+submodelrepositoryservice

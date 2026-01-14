@@ -28,7 +28,9 @@ package submodelelements
 
 import (
 	"database/sql"
+	"fmt"
 
+	"github.com/doug-martin/goqu/v9"
 	"github.com/eclipse-basyx/basyx-go-components/internal/common"
 	gen "github.com/eclipse-basyx/basyx-go-components/internal/common/model"
 	persistenceutils "github.com/eclipse-basyx/basyx-go-components/internal/submodelrepository/persistence/utils"
@@ -132,16 +134,116 @@ func (p PostgreSQLSubmodelElementListHandler) CreateNested(tx *sql.Tx, submodelI
 }
 
 // Update modifies an existing SubmodelElementList submodel element in the database.
-// Currently delegates to the decorated handler for base SubmodelElement updates.
+// This method handles both PATCH and PUT operations. For PUT operations, it deletes all
+// child elements before updating and updates the SubmodelElementList-specific table fields.
 //
 // Parameters:
+//   - submodelID: ID of the parent submodel
 //   - idShortOrPath: The idShort or path identifier of the element to update
 //   - submodelElement: The updated SubmodelElementList data
+//   - tx: Database transaction (if nil, a new transaction will be created)
+//   - isPut: true for PUT (replace all), false for PATCH (update only specified fields)
 //
 // Returns:
 //   - error: Error if the update operation fails
 func (p PostgreSQLSubmodelElementListHandler) Update(submodelID string, idShortOrPath string, submodelElement gen.SubmodelElement, tx *sql.Tx, isPut bool) error {
-	return p.decorated.Update(submodelID, idShortOrPath, submodelElement, tx, isPut)
+	var err error
+	localTx := tx
+
+	if tx == nil {
+		var startedTx *sql.Tx
+		var cu func(*error)
+
+		startedTx, cu, err = common.StartTransaction(p.db)
+		if err != nil {
+			return err
+		}
+
+		defer cu(&err)
+
+		localTx = startedTx
+	}
+
+	smeList, ok := submodelElement.(*gen.SubmodelElementList)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type SubmodelElementList")
+	}
+
+	// Validate required fields
+	if smeList.TypeValueListElement == nil {
+		return common.NewErrBadRequest(fmt.Sprintf("Missing required field 'typeValueListElement' for SubmodelElementList with idShortPath '%s'", idShortOrPath))
+	}
+
+	// Prepare semantic ID reference
+	var semanticID sql.NullInt64
+	if smeList.SemanticIdListElement != nil && !isEmptyReference(smeList.SemanticIdListElement) {
+		refID, err := insertReference(localTx, *smeList.SemanticIdListElement)
+		if err != nil {
+			return err
+		}
+		semanticID = sql.NullInt64{Int64: int64(refID), Valid: true}
+	}
+
+	// Prepare type value and value type
+	var typeValue, valueType sql.NullString
+	if smeList.TypeValueListElement != nil {
+		typeValue = sql.NullString{String: string(*smeList.TypeValueListElement), Valid: true}
+	}
+	if smeList.ValueTypeListElement != "" {
+		valueType = sql.NullString{String: string(smeList.ValueTypeListElement), Valid: true}
+	}
+
+	// Update submodel_element_list table with goqu
+	dialect := goqu.Dialect("postgres")
+
+	updateQuery, updateArgs, err := dialect.Update("submodel_element_list").
+		Set(goqu.Record{
+			"order_relevant":             smeList.OrderRelevant,
+			"semantic_id_list_element":   semanticID,
+			"type_value_list_element":    typeValue,
+			"value_type_list_element":    valueType,
+		}).
+		Where(goqu.C("id").In(
+			dialect.From("submodel_element").
+				Select("id").
+				Where(goqu.Ex{
+					"idshort_path": idShortOrPath,
+					"submodel_id":  submodelID,
+				}),
+		)).
+		ToSQL()
+	if err != nil {
+		return err
+	}
+
+	_, err = localTx.Exec(updateQuery, updateArgs...)
+	if err != nil {
+		return err
+	}
+
+	// For PUT operations, delete all children before updating
+	// The children will be recreated by the SubmodelRepositoryDatabase Update Method
+	if isPut {
+		err = DeleteAllChildren(p.db, submodelID, idShortOrPath, localTx)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Update the common submodel element properties
+	err = p.decorated.Update(submodelID, idShortOrPath, submodelElement, localTx, isPut)
+	if err != nil {
+		return err
+	}
+
+	if tx == nil {
+		err = localTx.Commit()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // UpdateValueOnly updates only the value of an existing SubmodelElementList submodel element identified by its idShort or path.

@@ -134,17 +134,64 @@ func (p PostgreSQLSubmodelElementCollectionHandler) CreateNested(tx *sql.Tx, sub
 }
 
 // Update modifies an existing SubmodelElementCollection identified by its idShort or path.
-// This method delegates the update operation to the decorated CRUD handler which handles
-// the common submodel element update logic.
+// This method handles both PATCH and PUT operations. For PUT operations, it deletes all
+// child elements before updating to ensure a clean replacement.
 //
 // Parameters:
+//   - submodelID: ID of the parent submodel
 //   - idShortOrPath: idShort or hierarchical path to the collection to update
 //   - submodelElement: Updated collection data
+//   - tx: Database transaction (if nil, a new transaction will be created)
+//   - isPut: true for PUT (replace all), false for PATCH (update only specified fields)
 //
 // Returns:
 //   - error: Error if update fails
 func (p PostgreSQLSubmodelElementCollectionHandler) Update(submodelID string, idShortOrPath string, submodelElement gen.SubmodelElement, tx *sql.Tx, isPut bool) error {
-	return p.decorated.Update(submodelID, idShortOrPath, submodelElement, tx, isPut)
+	var err error
+	localTx := tx
+
+	if tx == nil {
+		var startedTx *sql.Tx
+		var cu func(*error)
+
+		startedTx, cu, err = common.StartTransaction(p.db)
+		if err != nil {
+			return err
+		}
+
+		defer cu(&err)
+
+		localTx = startedTx
+	}
+
+	_, ok := submodelElement.(*gen.SubmodelElementCollection)
+	if !ok {
+		return common.NewErrBadRequest("submodelElement is not of type SubmodelElementCollection")
+	}
+
+	// For PUT operations, delete all children before updating
+	// The children will be recreated by the SubmodelRepositoryDatabase Update Method
+	if isPut {
+		err = DeleteAllChildren(p.db, submodelID, idShortOrPath, localTx)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Update the common submodel element properties
+	err = p.decorated.Update(submodelID, idShortOrPath, submodelElement, localTx, isPut)
+	if err != nil {
+		return err
+	}
+
+	if tx == nil {
+		err = localTx.Commit()
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // UpdateValueOnly updates only the value of an existing SubmodelElementCollection submodel element identified by its idShort or path.

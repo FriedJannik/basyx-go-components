@@ -1,0 +1,24 @@
+{
+    "modelType": "SubmodelElementCollection",
+    "idShort": "DemoCollection",
+    "value": [
+        {
+            "modelType": "Property",
+            "idShort": "UpdatedProperty1",
+            "valueType": "xs:string",
+            "value": "UpdatedValue1"
+        },
+        {
+            "modelType": "Property",
+            "idShort": "UpdatedProperty2",
+            "valueType": "xs:string",
+            "value": "UpdatedValue2"
+        },
+        {
+            "modelType": "Property",
+            "idShort": "NewProperty3",
+            "valueType": "xs:boolean",
+            "value": "true"
+        }
+    ]
+}

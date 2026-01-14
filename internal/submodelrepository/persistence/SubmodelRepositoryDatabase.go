@@ -1049,7 +1049,7 @@ func handleNestedElementsAfterPut(p *PostgreSQLSubmodelDatabase, idShortPath str
 	if err != nil {
 		return err
 	}
-	if modelType == "AnnotatedRelationshipElement" {
+	if modelType == "AnnotatedRelationshipElement" || modelType == "SubmodelElementCollection" || modelType == "SubmodelElementList" {
 		err = p.AddNestedSubmodelElementsIteratively(tx, submodelID, elementID, submodelElement, idShortPath, elementID)
 	}
 	return err

@@ -1,0 +1,27 @@
+{
+    "modelType": "SubmodelElementList",
+    "idShort": "DemoList",
+    "orderRelevant": false,
+    "typeValueListElement": "Property",
+    "valueTypeListElement": "xs:string",
+    "value": [
+        {
+            "modelType": "Property",
+            "idShort": "UpdatedItem1",
+            "valueType": "xs:string",
+            "value": "UpdatedFirstItem"
+        },
+        {
+            "modelType": "Property",
+            "idShort": "UpdatedItem2",
+            "valueType": "xs:string",
+            "value": "UpdatedSecondItem"
+        },
+        {
+            "modelType": "Property",
+            "idShort": "UpdatedItem3",
+            "valueType": "xs:string",
+            "value": "UpdatedThirdItem"
+        }
+    ]
+}

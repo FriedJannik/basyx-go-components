@@ -588,11 +588,67 @@
         "data": "postBody/putARE.json",
         "expectedStatus": 204
     },
-        {
+    {
         "context": "PUT AnnotatedRelationshipElement - Verify updated Element",
         "method": "GET",
         "endpoint": "http://localhost:6004/submodels/TWFyY3VzVGhpc0lzQU9ubHlBbm5vdGF0ZWRSZWxhdGlvbnNoaXBFbGVtZW50U3VibW9kZWw/submodel-elements/DemoAnnotatedRelationshipElement",
         "shouldMatch": "postBody/putARE.json",
+        "expectedStatus": 200
+    },
+    {
+        "context": "Post Submodel with SubmodelElementCollection",
+        "method": "POST",
+        "endpoint": "http://localhost:6004/submodels",
+        "data": "postBody/postSubmodelWithCollection.json",
+        "expectedStatus": 201
+    },
+    {
+        "context": "Get Submodel with SubmodelElementCollection",
+        "method": "GET",
+        "endpoint": "http://localhost:6004/submodels/T25seUNvbGxlY3Rpb25TdWJtb2RlbA==",
+        "shouldMatch": "postBody/postSubmodelWithCollection.json",
+        "expectedStatus": 200
+    },
+    {
+        "context": "PUT SubmodelElementCollection SubmodelElement (Replace)",
+        "method": "PUT",
+        "endpoint": "http://localhost:6004/submodels/T25seUNvbGxlY3Rpb25TdWJtb2RlbA==/submodel-elements/DemoCollection",
+        "data": "postBody/putCollection.json",
+        "expectedStatus": 204
+    },
+    {
+        "context": "PUT SubmodelElementCollection - Verify updated Element",
+        "method": "GET",
+        "endpoint": "http://localhost:6004/submodels/T25seUNvbGxlY3Rpb25TdWJtb2RlbA==/submodel-elements/DemoCollection",
+        "shouldMatch": "postBody/putCollection.json",
+        "expectedStatus": 200
+    },
+    {
+        "context": "Post Submodel with SubmodelElementList",
+        "method": "POST",
+        "endpoint": "http://localhost:6004/submodels",
+        "data": "postBody/postSubmodelWithList.json",
+        "expectedStatus": 201
+    },
+    {
+        "context": "Get Submodel with SubmodelElementList",
+        "method": "GET",
+        "endpoint": "http://localhost:6004/submodels/T25seUxpc3RTdWJtb2RlbA==",
+        "shouldMatch": "postBody/postSubmodelWithList.json",
+        "expectedStatus": 200
+    },
+    {
+        "context": "PUT SubmodelElementList SubmodelElement (Replace)",
+        "method": "PUT",
+        "endpoint": "http://localhost:6004/submodels/T25seUxpc3RTdWJtb2RlbA==/submodel-elements/DemoList",
+        "data": "postBody/putList.json",
+        "expectedStatus": 204
+    },
+    {
+        "context": "PUT SubmodelElementList - Verify updated Element",
+        "method": "GET",
+        "endpoint": "http://localhost:6004/submodels/T25seUxpc3RTdWJtb2RlbA==/submodel-elements/DemoList",
+        "shouldMatch": "postBody/putList.json",
         "expectedStatus": 200
     }
 ]

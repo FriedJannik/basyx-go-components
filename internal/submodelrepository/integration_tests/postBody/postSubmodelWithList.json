@@ -1,0 +1,33 @@
+{
+    "modelType": "Submodel",
+    "id": "OnlyListSubmodel",
+    "idShort": "ListSubmodel",
+    "kind": "Instance",
+    "administration": {
+        "revision": "1",
+        "version": "1"
+    },
+    "submodelElements": [
+        {
+            "modelType": "SubmodelElementList",
+            "idShort": "DemoList",
+            "orderRelevant": true,
+            "typeValueListElement": "Property",
+            "valueTypeListElement": "xs:string",
+            "value": [
+                {
+                    "modelType": "Property",
+                    "idShort": "ListItem1",
+                    "valueType": "xs:string",
+                    "value": "FirstItem"
+                },
+                {
+                    "modelType": "Property",
+                    "idShort": "ListItem2",
+                    "valueType": "xs:string",
+                    "value": "SecondItem"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,30 @@
+{
+    "modelType": "Submodel",
+    "id": "OnlyCollectionSubmodel",
+    "idShort": "CollectionSubmodel",
+    "kind": "Instance",
+    "administration": {
+        "revision": "1",
+        "version": "1"
+    },
+    "submodelElements": [
+        {
+            "modelType": "SubmodelElementCollection",
+            "idShort": "DemoCollection",
+            "value": [
+                {
+                    "modelType": "Property",
+                    "idShort": "CollectionProperty1",
+                    "valueType": "xs:string",
+                    "value": "PropertyValue1"
+                },
+                {
+                    "modelType": "Property",
+                    "idShort": "CollectionProperty2",
+                    "valueType": "xs:integer",
+                    "value": "42"
+                }
+            ]
+        }
+    ]
+}

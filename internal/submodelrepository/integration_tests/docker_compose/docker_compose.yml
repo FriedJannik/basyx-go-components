@@ -31,7 +31,7 @@ services:
       - POSTGRES_CONNMAXLIFETIMEMINUTES=5
       - ABAC_ENABLED=false
       - JWS_PRIVATEKEYPATH=/app/rsa-key.pem
-      - SERVER_STRICTVERIFICATION=false
+      - SERVER_STRICTVERIFICATION=off
     volumes:
       - ./rsa-key.pem:/app/rsa-key.pem:ro
     ports:

@@ -12,6 +12,7 @@ import (
 	"strconv"
 
 	"github.com/eclipse-basyx/basyx-go-components/internal/common"
+	commonmodel "github.com/eclipse-basyx/basyx-go-components/internal/common/model"
 	"github.com/eclipse-basyx/basyx-go-components/internal/companylookupservice/api"
 	companylookuppostgresql "github.com/eclipse-basyx/basyx-go-components/internal/companylookupservice/persistence"
 	"github.com/eclipse-basyx/basyx-go-components/pkg/companylookupapi"
@@ -27,6 +28,9 @@ func runServer(ctx context.Context, configPath string, databaseSchema string) er
 
 	cfg, err := common.LoadConfig(configPath)
 	if err != nil {
+		return err
+	}
+	if err := commonmodel.SetVerificationMode(cfg.Server.StrictVerification); err != nil {
 		return err
 	}
 

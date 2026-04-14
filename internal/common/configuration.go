@@ -38,6 +38,7 @@ import (
 	"reflect"
 	"strings"
 
+	commonmodel "github.com/eclipse-basyx/basyx-go-components/internal/common/model"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/spf13/viper"
@@ -49,7 +50,7 @@ var DefaultConfig = struct {
 	ServerPort                  int
 	ServerContextPath           string
 	ServerCacheEnabled          bool
-	ServerStrictVerification    bool
+	ServerStrictVerification    string
 	PgPort                      int
 	PgDBName                    string
 	PgMaxOpen                   int
@@ -71,7 +72,7 @@ var DefaultConfig = struct {
 	ServerPort:                  5004,
 	ServerContextPath:           "",
 	ServerCacheEnabled:          false,
-	ServerStrictVerification:    true,
+	ServerStrictVerification:    "strict",
 	PgPort:                      5432,
 	PgDBName:                    "basyxTestDB",
 	PgMaxOpen:                   50,
@@ -170,7 +171,7 @@ type ServerConfig struct {
 	Port               int    `mapstructure:"port" yaml:"port"`                             // HTTP server port (default: 5004)
 	ContextPath        string `mapstructure:"contextPath" yaml:"contextPath"`               // Base path for all endpoints
 	CacheEnabled       bool   `mapstructure:"cacheEnabled" yaml:"cacheEnabled"`             // Enable/disable response caching
-	StrictVerification bool   `mapstructure:"strictVerification" yaml:"strictVerification"` // Enable/disable strict AAS metamodel verification (default: true)
+	StrictVerification string `mapstructure:"strictVerification" yaml:"strictVerification"` // Verification mode: off|permissive|strict (default: strict)
 }
 
 // PostgresConfig contains PostgreSQL database connection parameters.
@@ -269,6 +270,12 @@ func LoadConfig(configPath string) (*Config, error) {
 		return nil, fmt.Errorf("unmarshal config: %w", err)
 	}
 
+	verificationMode, err := commonmodel.ParseVerificationMode(cfg.Server.StrictVerification)
+	if err != nil {
+		return nil, fmt.Errorf("invalid server.strictVerification: %w", err)
+	}
+	cfg.Server.StrictVerification = string(verificationMode)
+
 	log.Println("✅ Configuration loaded successfully")
 	PrintConfiguration(cfg)
 	return cfg, nil
@@ -295,7 +302,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("server.port", 5004)
 	v.SetDefault("server.contextPath", "")
 	v.SetDefault("server.cacheEnabled", false)
-	v.SetDefault("server.strictVerification", true)
+	v.SetDefault("server.strictVerification", "strict")
 
 	// PostgreSQL defaults
 	v.SetDefault("postgres.host", "db")
@@ -381,7 +388,7 @@ func PrintConfiguration(cfg *Config) {
 	add("Port", cfg.Server.Port, DefaultConfig.ServerPort)
 	add("Context Path", cfg.Server.ContextPath, DefaultConfig.ServerContextPath)
 	add("Cache Enabled", cfg.Server.CacheEnabled, DefaultConfig.ServerCacheEnabled)
-	add("Strict Verification", cfg.Server.StrictVerification, DefaultConfig.ServerStrictVerification)
+	add("Verification Mode", cfg.Server.StrictVerification, DefaultConfig.ServerStrictVerification)
 
 	lines = append(lines, divider)
 

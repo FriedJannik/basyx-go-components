@@ -399,41 +399,52 @@ func (obj *CompanyDescriptor) UnmarshalJSON(data []byte) error {
 		}
 	}
 
-	// Verify Description
-	var validationErrors []string
+	mode := GetVerificationMode()
+
 	for _, el := range obj.Description {
-		verification.Verify(el, func(verErr *verification.VerificationError) bool {
-			validationErrors = append(validationErrors, verErr.Error())
-			return false // Continue collecting all errors
-		})
-
-		if len(validationErrors) > 0 {
-			return errors.New("CompanyDescriptor: Description verification failed: " + validationErrors[0])
+		description := el
+		if err := ValidateWithMode(
+			mode,
+			"CompanyDescriptor.Description",
+			func(collector func(*verification.VerificationError) bool) {
+				verification.Verify(description, collector)
+			},
+			func(message string) error {
+				return errors.New("CompanyDescriptor: Description verification failed: " + message)
+			},
+		); err != nil {
+			return err
 		}
 	}
 
-	// Verify DisplayName
-	validationErrors = []string{}
 	for _, el := range obj.DisplayName {
-		verification.Verify(el, func(verErr *verification.VerificationError) bool {
-			validationErrors = append(validationErrors, verErr.Error())
-			return false // Continue collecting all errors
-		})
-
-		if len(validationErrors) > 0 {
-			return errors.New("CompanyDescriptor: DisplayName verification failed: " + validationErrors[0])
+		displayName := el
+		if err := ValidateWithMode(
+			mode,
+			"CompanyDescriptor.DisplayName",
+			func(collector func(*verification.VerificationError) bool) {
+				verification.Verify(displayName, collector)
+			},
+			func(message string) error {
+				return errors.New("CompanyDescriptor: DisplayName verification failed: " + message)
+			},
+		); err != nil {
+			return err
 		}
 	}
 
-	// Administration
-	validationErrors = []string{}
 	if obj.Administration != nil {
-		verification.Verify(obj.Administration, func(verErr *verification.VerificationError) bool {
-			validationErrors = append(validationErrors, verErr.Error())
-			return false // Continue collecting all errors
-		})
-		if len(validationErrors) > 0 {
-			return errors.New("CompanyDescriptor: Administration verification failed: " + validationErrors[0])
+		if err := ValidateWithMode(
+			mode,
+			"CompanyDescriptor.Administration",
+			func(collector func(*verification.VerificationError) bool) {
+				verification.Verify(obj.Administration, collector)
+			},
+			func(message string) error {
+				return errors.New("CompanyDescriptor: Administration verification failed: " + message)
+			},
+		); err != nil {
+			return err
 		}
 	}
 

@@ -27,7 +27,7 @@ type AssetAdministrationShellRepositoryAPIAPIController struct {
 	service            AssetAdministrationShellRepositoryAPIAPIServicer
 	errorHandler       ErrorHandler
 	contextPath        string
-	strictVerification bool
+	strictVerification string
 }
 
 // AssetAdministrationShellRepositoryAPIAPIOption for how the controller is set up.
@@ -41,7 +41,7 @@ func WithAssetAdministrationShellRepositoryAPIAPIErrorHandler(h ErrorHandler) As
 }
 
 // NewAssetAdministrationShellRepositoryAPIAPIController creates a default api controller
-func NewAssetAdministrationShellRepositoryAPIAPIController(s AssetAdministrationShellRepositoryAPIAPIServicer, contextPath string, strictVerification bool, opts ...AssetAdministrationShellRepositoryAPIAPIOption) *AssetAdministrationShellRepositoryAPIAPIController {
+func NewAssetAdministrationShellRepositoryAPIAPIController(s AssetAdministrationShellRepositoryAPIAPIServicer, contextPath string, strictVerification string, opts ...AssetAdministrationShellRepositoryAPIAPIOption) *AssetAdministrationShellRepositoryAPIAPIController {
 	controller := &AssetAdministrationShellRepositoryAPIAPIController{
 		service:            s,
 		errorHandler:       DefaultErrorHandler,

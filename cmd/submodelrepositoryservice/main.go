@@ -16,6 +16,7 @@ import (
 
 	"github.com/eclipse-basyx/basyx-go-components/internal/common"
 	"github.com/eclipse-basyx/basyx-go-components/internal/common/jws"
+	commonmodel "github.com/eclipse-basyx/basyx-go-components/internal/common/model"
 	auth "github.com/eclipse-basyx/basyx-go-components/internal/common/security"
 	"github.com/eclipse-basyx/basyx-go-components/internal/submodelrepository/api"
 	persistencepostgresql "github.com/eclipse-basyx/basyx-go-components/internal/submodelrepository/persistence"
@@ -31,6 +32,9 @@ func runServer(ctx context.Context, configPath string, databaseSchema string) er
 	// Load configuration
 	config, err := common.LoadConfig(configPath)
 	if err != nil {
+		return err
+	}
+	if err := commonmodel.SetVerificationMode(config.Server.StrictVerification); err != nil {
 		return err
 	}
 

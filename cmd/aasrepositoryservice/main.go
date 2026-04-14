@@ -15,6 +15,7 @@ import (
 	"github.com/eclipse-basyx/basyx-go-components/internal/aasrepository/api"
 	persistencepostgresql "github.com/eclipse-basyx/basyx-go-components/internal/aasrepository/persistence"
 	"github.com/eclipse-basyx/basyx-go-components/internal/common"
+	commonmodel "github.com/eclipse-basyx/basyx-go-components/internal/common/model"
 	auth "github.com/eclipse-basyx/basyx-go-components/internal/common/security"
 	openapi "github.com/eclipse-basyx/basyx-go-components/pkg/aasrepositoryapi/go"
 )
@@ -28,6 +29,9 @@ func runServer(ctx context.Context, configPath string, databaseSchema string) er
 
 	cfg, err := common.LoadConfig(configPath)
 	if err != nil {
+		return err
+	}
+	if err := commonmodel.SetVerificationMode(cfg.Server.StrictVerification); err != nil {
 		return err
 	}
 

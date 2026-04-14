@@ -49,7 +49,9 @@ func runServer(ctx context.Context, configPath string, databaseSchema string) er
 	if err != nil {
 		return err
 	}
-	commonmodel.SetStrictVerificationEnabled(cfg.Server.StrictVerification)
+	if err := commonmodel.SetVerificationMode(cfg.Server.StrictVerification); err != nil {
+		return err
+	}
 	commonmodel.SetSupportsSingularSupplementalSemanticId(cfg.General.SupportsSingularSupplementalSemanticId)
 
 	// AAS Environment Service always enables discovery integration.

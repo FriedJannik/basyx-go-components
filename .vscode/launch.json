@@ -117,6 +117,21 @@
                 "-databaseSchema",
                 "${workspaceFolder}/basyxschema.sql"
             ]
+        },
+        {
+            "name": "Launch Benchmark Service",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/cmd/benchmarkservice/main.go",
+            "args": [
+                "-port",
+                "8090",
+                "-openapi",
+                "${workspaceFolder}/cmd/submodelrepositoryservice/openapi.yaml",
+                "-results",
+                "${workspaceFolder}/benchmark-results"
+            ]
         }
     ]
 }

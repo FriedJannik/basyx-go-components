@@ -1,0 +1,71 @@
+{
+  "id": "run-1779350928334163000",
+  "state": "finished",
+  "config": {
+    "name": "",
+    "targetBaseUrl": "http://localhost:5004",
+    "concurrency": 1,
+    "durationSeconds": 0,
+    "requestCount": 1,
+    "seed": "dev-seed",
+    "workflow": [
+      {
+        "name": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "body": "{\n  \"modelType\": \"Submodel\",\n  \"kind\": \"Template\",\n  \"semanticId\": {\n    \"keys\": [\n      {\n        \"type\": \"Submodel\",\n        \"value\": \"0173-1#01-AHX837#002\"\n      }\n    ],\n    \"type\": \"ModelReference\"\n  },\n  \"supplementalSemanticIds\": [\n    {\n      \"keys\": [\n        {\n          \"type\": \"GlobalReference\",\n          \"value\": \"https://api.eclass-cdp.com/0173-1-01-AHX837-002\"\n        }\n      ],\n      \"type\": \"ExternalReference\"\n    }\n  ],\n  \"administration\": {\n    \"revision\": \"0\",\n    \"templateId\": \"https://admin-shell.io/idta-02003-2-0\",\n    \"version\": \"2\"\n  },\n  \"id\": \"benchmark-{worker}-{seed}\",\n  \"description\": [\n    {\n      \"language\": \"en\",\n      \"text\": \"Submodel containing technical data of the asset and associated product classificatons\"\n    },\n    {\n      \"language\": \"de\",\n      \"text\": \"Teilmodell, das die technischen Daten des Assets und die zugehörigen Produktklassifizierungen enthält\"\n    }\n  ],\n  \"displayName\": [\n    {\n      \"language\": \"en\",\n      \"text\": \"Technical Data\"\n    }\n  ],\n  \"idShort\": \"benchmark-{worker}\",\n  \"submodelElements\": [\n    {\n        \"idShort\": \"a\",\n        \"modelType\": \"Property\",\n        \"valueType\": \"xs:string\",\n        \"value\": \"\"\n    },\n    {\n        \"idShort\": \"b\",\n        \"modelType\": \"Property\",\n        \"valueType\": \"xs:string\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    ],
+    "postgresDsn": "postgres://postgres:snoopy2002@127.0.0.1:5432/basyxGoBenchmarkTest"
+  },
+  "startedAt": "2026-05-21T10:08:48.334174+02:00",
+  "endedAt": "2026-05-21T10:08:48.359182+02:00",
+  "result": {
+    "totalRequests": 1,
+    "successfulRequests": 1,
+    "failedRequests": 0,
+    "requestsPerSecond": 40.072664564107384,
+    "errorRate": 0,
+    "latency": {
+      "minMs": 24.487,
+      "avgMs": 24.487,
+      "p50Ms": 24.487,
+      "p95Ms": 24.487,
+      "p99Ms": 24.487,
+      "maxMs": 24.487
+    },
+    "statusCodes": {
+      "201": 1
+    },
+    "errors": null,
+    "systemMetrics": [
+      {
+        "time": "2026-05-21T10:08:48.358957+02:00",
+        "processId": 58417,
+        "cpuPercent": 0,
+        "ramBytes": 14567688,
+        "diskReadBytes": 0,
+        "diskWrittenBytes": 0,
+        "collectionMessage": "BENCH-METRICS-RUNTIMEFALLBACK: process metrics use benchmark service runtime stats on this OS"
+      }
+    ],
+    "postgresMetrics": [
+      {
+        "time": "2026-05-21T10:08:48.359056+02:00",
+        "activeConnections": 0,
+        "idleConnections": 0,
+        "transactionsCommitted": 0,
+        "transactionsRolledBack": 0,
+        "tuplesReturned": 0,
+        "tuplesFetched": 0,
+        "tuplesInserted": 0,
+        "tuplesUpdated": 0,
+        "tuplesDeleted": 0,
+        "collectionMessage": "BENCH-PGMETRICS-EXECSTATDB: context canceled"
+      }
+    ]
+  }
+}

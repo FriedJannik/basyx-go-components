@@ -1,0 +1,983 @@
+{
+  "id": "run-1779350982844701000",
+  "state": "finished",
+  "config": {
+    "name": "",
+    "targetBaseUrl": "http://localhost:5004",
+    "concurrency": 1,
+    "durationSeconds": 0,
+    "requestCount": 100,
+    "seed": "dev-seed-v2",
+    "workflow": [
+      {
+        "name": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "body": "{\n  \"modelType\": \"Submodel\",\n  \"kind\": \"Template\",\n  \"semanticId\": {\n    \"keys\": [\n      {\n        \"type\": \"Submodel\",\n        \"value\": \"0173-1#01-AHX837#002\"\n      }\n    ],\n    \"type\": \"ModelReference\"\n  },\n  \"supplementalSemanticIds\": [\n    {\n      \"keys\": [\n        {\n          \"type\": \"GlobalReference\",\n          \"value\": \"https://api.eclass-cdp.com/0173-1-01-AHX837-002\"\n        }\n      ],\n      \"type\": \"ExternalReference\"\n    }\n  ],\n  \"administration\": {\n    \"revision\": \"0\",\n    \"templateId\": \"https://admin-shell.io/idta-02003-2-0\",\n    \"version\": \"2\"\n  },\n  \"id\": \"benchmark-{worker}-{seed}\",\n  \"description\": [\n    {\n      \"language\": \"en\",\n      \"text\": \"Submodel containing technical data of the asset and associated product classificatons\"\n    },\n    {\n      \"language\": \"de\",\n      \"text\": \"Teilmodell, das die technischen Daten des Assets und die zugehörigen Produktklassifizierungen enthält\"\n    }\n  ],\n  \"displayName\": [\n    {\n      \"language\": \"en\",\n      \"text\": \"Technical Data\"\n    }\n  ],\n  \"idShort\": \"benchmark-{worker}\",\n  \"submodelElements\": [\n    {\n        \"idShort\": \"a\",\n        \"modelType\": \"Property\",\n        \"valueType\": \"xs:string\",\n        \"value\": \"\"\n    },\n    {\n        \"idShort\": \"b\",\n        \"modelType\": \"Property\",\n        \"valueType\": \"xs:string\"\n    }\n  ]\n}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      {
+        "name": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "body": "",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      {
+        "name": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "body": "",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    ],
+    "postgresDsn": "postgres://postgres:snoopy2002@127.0.0.1:5432/basyxGoBenchmarkTest"
+  },
+  "startedAt": "2026-05-21T10:09:42.844707+02:00",
+  "endedAt": "2026-05-21T10:09:42.904408+02:00",
+  "result": {
+    "totalRequests": 100,
+    "successfulRequests": 1,
+    "failedRequests": 99,
+    "requestsPerSecond": 1696.1370478734682,
+    "errorRate": 0.99,
+    "latency": {
+      "minMs": 0.136,
+      "avgMs": 0.57072,
+      "p50Ms": 0.214,
+      "p95Ms": 1.368,
+      "p99Ms": 2.905,
+      "maxMs": 8.484
+    },
+    "statusCodes": {
+      "201": 1,
+      "400": 66,
+      "409": 33
+    },
+    "errors": [
+      {
+        "time": "2026-05-21T10:09:42.854382+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.854627+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.855632+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.855847+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.856143+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.859068+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.859305+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.859537+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.860926+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.861159+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.861354+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.862627+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.862827+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.863027+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.864012+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.86425+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.864487+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.865489+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.865774+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.866027+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.867122+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.867313+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.867519+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.868937+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.869175+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.869422+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.870541+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.870785+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.870996+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.872032+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.872263+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.872493+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.875535+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.875761+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.875995+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.8772+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.877376+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.877563+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.878588+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.878779+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.878992+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.880597+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.88079+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.880979+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.881862+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.882036+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.882208+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.883037+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.883222+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.883412+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.884398+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.884608+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.884817+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.886052+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.886294+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.886503+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.887608+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.887796+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.887991+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.88913+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.889356+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.88959+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.890575+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.890757+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.890906+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.891659+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.891834+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.892007+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.892684+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.892883+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.893069+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.89399+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.894168+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.894357+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.895184+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.895366+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.895557+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.896214+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.896374+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.896562+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.897303+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.897466+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.897643+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.898441+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.898627+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.898793+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.899594+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.899759+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.899911+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.900787+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.90096+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.901123+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.902061+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.90222+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.902378+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.903214+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.903404+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.903557+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:09:42.904288+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 409,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"409 Conflict: SMREPO-NEWSM-CREATE-CONFLICT submodel identifier already exists\",\"code\":\"409\",\"correlationId\":\"SMREPO-409-PostSubmodel-Conflict-IdConflict\",\"timestamp\":\"2026-05-21T10:09:42+02:00\"}]"
+      }
+    ],
+    "systemMetrics": [
+      {
+        "time": "2026-05-21T10:09:42.904301+02:00",
+        "processId": 58417,
+        "cpuPercent": 0,
+        "ramBytes": 14829832,
+        "diskReadBytes": 0,
+        "diskWrittenBytes": 0,
+        "collectionMessage": "BENCH-METRICS-RUNTIMEFALLBACK: process metrics use benchmark service runtime stats on this OS"
+      }
+    ],
+    "postgresMetrics": [
+      {
+        "time": "2026-05-21T10:09:42.90434+02:00",
+        "activeConnections": 0,
+        "idleConnections": 0,
+        "transactionsCommitted": 0,
+        "transactionsRolledBack": 0,
+        "tuplesReturned": 0,
+        "tuplesFetched": 0,
+        "tuplesInserted": 0,
+        "tuplesUpdated": 0,
+        "tuplesDeleted": 0,
+        "collectionMessage": "BENCH-PGMETRICS-EXECSTATDB: context canceled"
+      }
+    ]
+  }
+}

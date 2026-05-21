@@ -1,0 +1,784 @@
+{
+  "id": "run-1779350725250451000",
+  "state": "finished",
+  "config": {
+    "name": "",
+    "targetBaseUrl": "http://localhost:5004",
+    "concurrency": 4,
+    "durationSeconds": 0,
+    "requestCount": 100,
+    "seed": "dev-seed",
+    "workflow": [
+      {
+        "name": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "body": "{\"id\":\"benchmark-{worker}-{seed}\",\"idShort\":\"benchmark-{worker}\"}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      {
+        "name": "GetAllSubmodels",
+        "method": "GET",
+        "path": "/submodels",
+        "body": "",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      {
+        "name": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "body": "",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      },
+      {
+        "name": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "body": "",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    ],
+    "postgresDsn": "postgrs://postgres:snoopy2002@localhost:5432/postgres"
+  },
+  "startedAt": "2026-05-21T10:05:25.250457+02:00",
+  "endedAt": "2026-05-21T10:05:25.287351+02:00",
+  "result": {
+    "totalRequests": 103,
+    "successfulRequests": 27,
+    "failedRequests": 76,
+    "requestsPerSecond": 2796.614196210995,
+    "errorRate": 0.7378640776699029,
+    "latency": {
+      "minMs": 0.129,
+      "avgMs": 1.4021262135922332,
+      "p50Ms": 0.224,
+      "p95Ms": 3.484,
+      "p99Ms": 21.166,
+      "maxMs": 28.442
+    },
+    "statusCodes": {
+      "200": 27,
+      "400": 76
+    },
+    "errors": [
+      {
+        "time": "2026-05-21T10:05:25.254051+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.254059+02:00",
+        "workerId": 1,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.254103+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.254123+02:00",
+        "workerId": 2,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.268431+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.268699+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.26894+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.271076+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.271374+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.271637+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.273329+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.273576+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.2738+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.275596+02:00",
+        "workerId": 2,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.275943+02:00",
+        "workerId": 2,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.276102+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.276182+02:00",
+        "workerId": 2,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.276325+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.27657+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.277924+02:00",
+        "workerId": 2,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.278163+02:00",
+        "workerId": 2,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.27834+02:00",
+        "workerId": 2,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.279066+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.279285+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.279449+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.279474+02:00",
+        "workerId": 2,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.27965+02:00",
+        "workerId": 2,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.279791+02:00",
+        "workerId": 2,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.280573+02:00",
+        "workerId": 1,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.280771+02:00",
+        "workerId": 1,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.280818+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.28096+02:00",
+        "workerId": 1,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.281016+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.281252+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.281599+02:00",
+        "workerId": 2,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.281773+02:00",
+        "workerId": 2,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.28198+02:00",
+        "workerId": 2,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.282284+02:00",
+        "workerId": 1,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.2824+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.282494+02:00",
+        "workerId": 1,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.282633+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.282753+02:00",
+        "workerId": 1,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.282793+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.282924+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.282987+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.283101+02:00",
+        "workerId": 2,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.283218+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.283323+02:00",
+        "workerId": 2,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.283521+02:00",
+        "workerId": 2,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.283838+02:00",
+        "workerId": 1,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.284002+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.284028+02:00",
+        "workerId": 1,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.284249+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.284269+02:00",
+        "workerId": 1,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.28431+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.284499+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.284522+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.284542+02:00",
+        "workerId": 2,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.284723+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.284748+02:00",
+        "workerId": 2,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.284935+02:00",
+        "workerId": 2,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.285273+02:00",
+        "workerId": 1,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.285391+02:00",
+        "workerId": 3,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.285465+02:00",
+        "workerId": 1,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.285616+02:00",
+        "workerId": 3,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.285679+02:00",
+        "workerId": 1,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.285722+02:00",
+        "workerId": 0,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.285859+02:00",
+        "workerId": 3,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.285944+02:00",
+        "workerId": 0,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.286025+02:00",
+        "workerId": 2,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.28616+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.286223+02:00",
+        "workerId": 2,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.286398+02:00",
+        "workerId": 2,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      },
+      {
+        "time": "2026-05-21T10:05:25.286671+02:00",
+        "workerId": 1,
+        "step": "GetSubmodelById",
+        "method": "GET",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-GetSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.286855+02:00",
+        "workerId": 1,
+        "step": "DeleteSubmodelById",
+        "method": "DELETE",
+        "path": "/submodels/{submodelIdentifier}",
+        "status": 400,
+        "message": "[{\"messageType\":\"Error\",\"text\":\"not base64url encoded (illegal base64 data at input byte 0)\",\"code\":\"400\",\"correlationId\":\"SMREPO-400-DeleteSubmodelByID-BadRequest-MalformedSubmodelIdentifier\",\"timestamp\":\"2026-05-21T10:05:25+02:00\"}]"
+      },
+      {
+        "time": "2026-05-21T10:05:25.287014+02:00",
+        "workerId": 1,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      }
+    ],
+    "systemMetrics": [
+      {
+        "time": "2026-05-21T10:05:25.28722+02:00",
+        "processId": 58417,
+        "cpuPercent": 0,
+        "ramBytes": 14305544,
+        "diskReadBytes": 0,
+        "diskWrittenBytes": 0,
+        "collectionMessage": "BENCH-METRICS-RUNTIMEFALLBACK: process metrics use benchmark service runtime stats on this OS"
+      }
+    ],
+    "postgresMetrics": [
+      {
+        "time": "2026-05-21T10:05:25.287273+02:00",
+        "activeConnections": 0,
+        "idleConnections": 0,
+        "transactionsCommitted": 0,
+        "transactionsRolledBack": 0,
+        "tuplesReturned": 0,
+        "tuplesFetched": 0,
+        "tuplesInserted": 0,
+        "tuplesUpdated": 0,
+        "tuplesDeleted": 0,
+        "collectionMessage": "BENCH-PGMETRICS-EXECSTATDB: context canceled"
+      }
+    ]
+  }
+}

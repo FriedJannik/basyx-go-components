@@ -9,9 +9,9 @@ postgres:
   host: localhost
   port: 5432
   user: postgres
-  password: postgres
-  # dbname: basyxGoBenchmarkTest
-  dbname: basyx
+  password: snoopy2002
+  dbname: basyxGoBenchmarkTest
+  # dbname: basyx
   maxOpenConnections: 500
   maxIdleConnections: 500
   connMaxLifetimeMinutes: 5

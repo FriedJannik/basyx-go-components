@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BaSyx Benchmark Lab</title>
+  <style>
+    :root { --ink:#1f2933; --paper:#f5f7f7; --panel:#ffffff; --accent:#179c7d; --accent-dark:#0b6b57; --hot:#c2412d; --muted:#65727a; --line:#d9e0e3; --soft:#e9f4f1; }
+    * { box-sizing: border-box; }
+    body { margin:0; color:var(--ink); background:linear-gradient(90deg, var(--paper) 0 72%, #ddebe7 72% 100%); font-family: "Frutiger", "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+    header { position:relative; padding:2rem clamp(1rem,4vw,4.5rem) 2.6rem; background:var(--panel); border-bottom:1px solid var(--line); overflow:hidden; }
+    header::before { content:""; position:absolute; inset:0 auto 0 0; width:.55rem; background:var(--accent); }
+    header::after { content:""; position:absolute; right:clamp(1rem,4vw,4.5rem); top:1.7rem; width:6.5rem; height:6.5rem; background:linear-gradient(135deg,var(--accent) 0 32%,transparent 32% 42%,var(--accent-dark) 42% 68%,transparent 68%); opacity:.18; }
+    h1 { max-width:58rem; margin:.45rem 0 0; font-size:clamp(2.2rem,5vw,5rem); line-height:.95; letter-spacing:-.055em; font-weight:750; }
+    h2 { margin:.1rem 0 1rem; font-size:1.05rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent-dark); }
+    main { display:grid; grid-template-columns:minmax(340px, 480px) 1fr; gap:1.1rem; padding:1.1rem clamp(1rem,4vw,4.5rem) 3rem; }
+    section { background:var(--panel); border:1px solid var(--line); border-radius:0; padding:1.15rem; box-shadow:0 14px 35px rgba(31,41,51,.08); }
+    label { display:block; font-size:.82rem; font-weight:700; letter-spacing:.02em; margin-top:.85rem; color:#33444b; }
+    input, textarea, select, button { width:100%; border:1px solid var(--line); border-radius:0; padding:.72rem .78rem; font:inherit; background:white; color:var(--ink); }
+    input:focus, textarea:focus, select:focus { outline:3px solid rgba(23,156,125,.18); border-color:var(--accent); }
+    textarea { min-height:9rem; font-family:"Cascadia Mono", "SFMono-Regular", Menlo, Consolas, monospace; font-size:.86rem; line-height:1.42; }
+    button { cursor:pointer; background:var(--accent); color:white; border:0; font-weight:700; margin-top:.75rem; transition:background .15s ease, transform .15s ease; }
+    button:hover { background:var(--accent-dark); transform:translateY(-1px); }
+    button.secondary { background:#394951; }
+    button.danger { background:var(--hot); }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+    .templates, .workflow, .runs { display:grid; gap:.5rem; max-height: 22rem; overflow:auto; }
+    .card { border:1px solid var(--line); border-left:4px solid var(--accent); padding:.75rem; background:white; }
+    .card button { margin-top:.45rem; padding:.45rem; }
+    .pill { display:inline-block; padding:.18rem .5rem; background:var(--soft); color:var(--accent-dark); font-size:.76rem; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .muted { color:var(--muted); }
+    pre { white-space:pre-wrap; overflow:auto; background:#182329; color:#e7fff8; border-left:4px solid var(--accent); padding:1rem; max-height:32rem; }
+    @media (max-width: 900px) { main { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="pill">Fraunhofer IESE style benchmark console</p>
+    <h1>BaSyx Benchmark Lab</h1>
+    <p class="muted">Configure OpenAPI-derived workflows, run them in the backend, stop them, and inspect persisted results.</p>
+  </header>
+  <main>
+    <section>
+      <h2>Run Configuration</h2>
+      <label>OpenAPI spec path</label><input id="spec" value="cmd/submodelrepositoryservice/openapi.yaml">
+      <button onclick="loadTemplates()">Load Templates</button>
+      <label>Target Base URL</label><input id="target" value="http://localhost:8081">
+      <div class="grid">
+        <div><label>Concurrency</label><input id="concurrency" type="number" min="1" value="1"></div>
+        <div><label>Request count</label><input id="requestCount" type="number" min="0" value="20"></div>
+      </div>
+      <div class="grid">
+        <div><label>Duration seconds</label><input id="duration" type="number" min="0" value="0"></div>
+        <div><label>Target PID</label><input id="pid" type="number" min="0" value="0"></div>
+      </div>
+      <label>Seed</label><input id="seed" value="dev-seed">
+      <label>PostgreSQL DSN</label><input id="pg" placeholder="postgres://user:pass@localhost:5432/postgres?sslmode=disable">
+      <label>Default JSON body for new body steps</label><textarea id="body">{"id":"benchmark-{worker}-{seed}","idShort":"benchmark-{worker}"}</textarea>
+      <button class="secondary" onclick="applyDefaultBodyToWorkflowBodies()">Apply Body to Workflow Steps</button>
+      <label>Templates</label><div id="templates" class="templates"></div>
+    </section>
+    <section>
+      <h2>Workflow</h2>
+      <div id="workflow" class="workflow"></div>
+      <button onclick="startRun()">Start Benchmark</button>
+      <button class="secondary" onclick="refreshRuns()">Refresh Runs</button>
+      <h2>Runs</h2><div id="runs" class="runs"></div>
+      <h2>Result</h2><pre id="result">No run selected yet.</pre>
+    </section>
+  </main>
+<script>
+let templates = [];
+let workflow = [];
+let activeRun = null;
+let poller = null;
+
+async function loadTemplates() {
+  const spec = encodeURIComponent(document.getElementById('spec').value);
+  const response = await fetch(`/api/templates?spec=${spec}`);
+  const payload = await response.json();
+  if (!response.ok || !Array.isArray(payload)) {
+    const message = payload.error || 'Template response was not a list.';
+    document.getElementById('templates').innerHTML = `<div class="card"><b>Could not load templates</b><br><span class="muted">${escapeHtml(message)}</span></div>`;
+    templates = [];
+    return;
+  }
+  templates = payload;
+  document.getElementById('templates').innerHTML = templates.map((t, i) => `
+    <div class="card"><span class="pill">${t.method}</span> <b>${t.path}</b><br><span class="muted">${t.operationId || t.summary || ''}</span>
+    <button onclick="addStep(${i})">Add Step</button></div>`).join('');
+}
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function addStep(i) {
+  const t = templates[i];
+  workflow.push({name: t.operationId || t.id, method: t.method, path: t.path, hasBody: t.hasBody, body: t.hasBody ? document.getElementById('body').value : '', headers: {'Content-Type':'application/json'}});
+  renderWorkflow();
+}
+function renderWorkflow() {
+  document.getElementById('workflow').innerHTML = workflow.map((s, i) => `
+    <div class="card"><span class="pill">${i + 1}</span> ${s.method} ${s.path}
+    ${s.hasBody ? `<label>Request body for this step</label><textarea id="step-body-${i}" oninput="workflow[${i}].body = this.value">${escapeHtml(s.body || '')}</textarea>` : ''}
+    <button class="danger" onclick="workflow.splice(${i},1);renderWorkflow()">Remove</button></div>`).join('') || '<p class="muted">Add templates to build an ordered workflow.</p>';
+}
+function applyDefaultBodyToWorkflowBodies() {
+  const body = document.getElementById('body').value;
+  workflow = workflow.map(step => step.hasBody ? {...step, body} : step);
+  renderWorkflow();
+}
+function workflowForRun() {
+  return workflow.map((step, i) => {
+    const bodyInput = document.getElementById(`step-body-${i}`);
+    const body = step.hasBody && bodyInput ? bodyInput.value : step.body;
+    return {name: step.name, method: step.method, path: step.path, body: body || '', headers: step.headers || {}};
+  });
+}
+async function startRun() {
+  const cfg = {
+    targetBaseUrl: document.getElementById('target').value,
+    concurrency: Number(document.getElementById('concurrency').value),
+    requestCount: Number(document.getElementById('requestCount').value),
+    durationSeconds: Number(document.getElementById('duration').value),
+    seed: document.getElementById('seed').value,
+    targetProcessId: Number(document.getElementById('pid').value),
+    postgresDsn: document.getElementById('pg').value,
+    workflow: workflowForRun()
+  };
+  const res = await fetch('/api/runs', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(cfg)}).then(r => r.json());
+  activeRun = res.id;
+  refreshRuns();
+  startPolling();
+}
+function startPolling() {
+  clearInterval(poller);
+  poller = setInterval(() => activeRun && showRun(activeRun), 1000);
+}
+async function stopRun(id) { await fetch(`/api/runs/${id}/stop`, {method:'POST'}); await showRun(id); }
+async function showRun(id) {
+  activeRun = id;
+  const run = await fetch(`/api/runs/${id}`).then(r => r.json());
+  document.getElementById('result').textContent = JSON.stringify(run, null, 2);
+  if (run.state !== 'running') clearInterval(poller);
+}
+async function refreshRuns() {
+  const runs = await fetch('/api/runs').then(r => r.json());
+  document.getElementById('runs').innerHTML = runs.map(r => `<div class="card"><span class="pill">${r.state}</span> <b>${r.id}</b><br><span class="muted">${r.result.totalRequests || 0} requests, ${((r.result.errorRate || 0) * 100).toFixed(1)}% errors</span><button onclick="showRun('${r.id}')">View</button>${r.state === 'running' ? `<button class="danger" onclick="stopRun('${r.id}')">Stop</button>` : ''}</div>`).join('');
+}
+loadTemplates().catch(e => document.getElementById('templates').textContent = e);
+renderWorkflow(); refreshRuns();
+</script>
+</body>
+</html>

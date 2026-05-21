@@ -1,0 +1,81 @@
+{
+  "id": "run-1779350817257099000",
+  "state": "finished",
+  "config": {
+    "name": "",
+    "targetBaseUrl": "http://localhost:5004",
+    "concurrency": 1,
+    "durationSeconds": 0,
+    "requestCount": 1,
+    "seed": "dev-seed",
+    "workflow": [
+      {
+        "name": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "body": "{\"id\":\"benchmark-{worker}-{seed}\",\"idShort\":\"benchmark-{worker}\"}",
+        "headers": {
+          "Content-Type": "application/json"
+        }
+      }
+    ],
+    "postgresDsn": "postgres://postgres:snoopy2002@127.0.0.1:5432/basyxGoBenchmarkTest"
+  },
+  "startedAt": "2026-05-21T10:06:57.257106+02:00",
+  "endedAt": "2026-05-21T10:06:57.259795+02:00",
+  "result": {
+    "totalRequests": 1,
+    "successfulRequests": 0,
+    "failedRequests": 1,
+    "requestsPerSecond": 383.1234136296154,
+    "errorRate": 1,
+    "latency": {
+      "minMs": 2.25,
+      "avgMs": 2.25,
+      "p50Ms": 2.25,
+      "p95Ms": 2.25,
+      "p99Ms": 2.25,
+      "maxMs": 2.25
+    },
+    "statusCodes": {
+      "400": 1
+    },
+    "errors": [
+      {
+        "time": "2026-05-21T10:06:57.259529+02:00",
+        "workerId": 0,
+        "step": "PostSubmodel",
+        "method": "POST",
+        "path": "/submodels",
+        "status": 400,
+        "message": "\": The required property modelType is missing\""
+      }
+    ],
+    "systemMetrics": [
+      {
+        "time": "2026-05-21T10:06:57.259546+02:00",
+        "processId": 58417,
+        "cpuPercent": 0,
+        "ramBytes": 14567688,
+        "diskReadBytes": 0,
+        "diskWrittenBytes": 0,
+        "collectionMessage": "BENCH-METRICS-RUNTIMEFALLBACK: process metrics use benchmark service runtime stats on this OS"
+      }
+    ],
+    "postgresMetrics": [
+      {
+        "time": "2026-05-21T10:06:57.259659+02:00",
+        "activeConnections": 0,
+        "idleConnections": 0,
+        "transactionsCommitted": 0,
+        "transactionsRolledBack": 0,
+        "tuplesReturned": 0,
+        "tuplesFetched": 0,
+        "tuplesInserted": 0,
+        "tuplesUpdated": 0,
+        "tuplesDeleted": 0,
+        "collectionMessage": "BENCH-PGMETRICS-EXECSTATDB: context canceled"
+      }
+    ]
+  }
+}

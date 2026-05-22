@@ -32,7 +32,7 @@ func TestRunnerExecutesWorkflowWithEncodedIDSubstitution(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := Config{TargetBaseURL: server.URL, Concurrency: 1, RequestCount: 3, Workflow: []WorkflowStep{
+	cfg := Config{TargetBaseURL: server.URL, Concurrency: 1, RequestCount: 1, Workflow: []WorkflowStep{
 		{Name: "create", Method: http.MethodPost, Path: "/submodels", Body: `{"id":"submodel-1"}`},
 		{Name: "read", Method: http.MethodGet, Path: "/submodels/{id}"},
 		{Name: "delete", Method: http.MethodDelete, Path: "/submodels/{id}"},
@@ -59,7 +59,7 @@ func TestRunnerSubstitutesOpenAPIIdentifierAliasWithEncodedID(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := Config{TargetBaseURL: server.URL, Concurrency: 1, RequestCount: 2, Workflow: []WorkflowStep{
+	cfg := Config{TargetBaseURL: server.URL, Concurrency: 1, RequestCount: 1, Workflow: []WorkflowStep{
 		{Name: "create", Method: http.MethodPost, Path: "/submodels", Body: `{"id":"benchmark-{worker}-{seed}"}`},
 		{Name: "read", Method: http.MethodGet, Path: "/submodels/{submodelIdentifier}"},
 	}}
@@ -67,6 +67,45 @@ func TestRunnerSubstitutesOpenAPIIdentifierAliasWithEncodedID(t *testing.T) {
 	require.EqualValues(t, 2, result.TotalRequests)
 	require.EqualValues(t, 2, result.SuccessfulRequests)
 	require.Zero(t, result.FailedRequests)
+}
+
+func TestRunnerAppendsRequestIndexToPostBodyIDWhenMissing(t *testing.T) {
+	var mu sync.Mutex
+	ids := make([]string, 0, 2)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]string
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		mu.Lock()
+		ids = append(ids, body["id"])
+		mu.Unlock()
+		_ = json.NewEncoder(w).Encode(map[string]string{"id": body["id"]})
+	}))
+	defer server.Close()
+
+	cfg := Config{TargetBaseURL: server.URL, Concurrency: 1, RequestCount: 2, Workflow: []WorkflowStep{
+		{Name: "create", Method: http.MethodPost, Path: "/submodels", Body: `{"id":"resource"}`},
+	}}
+	result := NewRunner().Execute(context.TODO(), cfg, nil, nil)
+	require.EqualValues(t, 2, result.SuccessfulRequests)
+	require.ElementsMatch(t, []string{"resource-1", "resource-2"}, ids)
+}
+
+func TestRunnerDoesNotDoubleAppendRequestIndexWhenPlaceholderIsUsed(t *testing.T) {
+	var id string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body map[string]string
+		require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+		id = body["id"]
+		_ = json.NewEncoder(w).Encode(map[string]string{"id": body["id"]})
+	}))
+	defer server.Close()
+
+	cfg := Config{TargetBaseURL: server.URL, Concurrency: 1, RequestCount: 1, Workflow: []WorkflowStep{
+		{Name: "create", Method: http.MethodPost, Path: "/submodels", Body: `{"id":"resource-{request}"}`},
+	}}
+	result := NewRunner().Execute(context.TODO(), cfg, nil, nil)
+	require.EqualValues(t, 1, result.SuccessfulRequests)
+	require.Equal(t, "resource-1", id)
 }
 
 func TestRunnerContinuesAfterErrors(t *testing.T) {
@@ -91,12 +130,16 @@ func TestRunnerContinuesAfterErrors(t *testing.T) {
 
 func TestRunnerKeepsWorkerWorkflowContextIsolated(t *testing.T) {
 	var mu sync.Mutex
+	createdIDs := map[string]bool{}
 	paths := map[string]int{}
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			var body map[string]string
 			require.NoError(t, json.NewDecoder(r.Body).Decode(&body))
+			mu.Lock()
+			createdIDs[body["id"]] = true
+			mu.Unlock()
 			_ = json.NewEncoder(w).Encode(map[string]string{"id": body["id"]})
 		case http.MethodGet:
 			mu.Lock()
@@ -107,16 +150,40 @@ func TestRunnerKeepsWorkerWorkflowContextIsolated(t *testing.T) {
 	}))
 	defer server.Close()
 
-	cfg := Config{TargetBaseURL: server.URL, Concurrency: 2, RequestCount: 4, Workflow: []WorkflowStep{
-		{Name: "create", Method: http.MethodPost, Path: "/submodels", Body: `{"id":"resource-{worker}"}`},
+	cfg := Config{TargetBaseURL: server.URL, Concurrency: 2, RequestCount: 2, Workflow: []WorkflowStep{
+		{Name: "create", Method: http.MethodPost, Path: "/submodels", Body: `{"id":"resource-{worker}-{request}"}`},
 		{Name: "read", Method: http.MethodGet, Path: "/submodels/{id}"},
 	}}
 	result := NewRunner().Execute(context.TODO(), cfg, nil, nil)
 	require.GreaterOrEqual(t, result.TotalRequests, int64(4))
 	mu.Lock()
 	defer mu.Unlock()
-	require.Contains(t, paths, "/submodels/"+base64.RawURLEncoding.EncodeToString([]byte("resource-0")))
-	require.Contains(t, paths, "/submodels/"+base64.RawURLEncoding.EncodeToString([]byte("resource-1")))
+	require.Len(t, createdIDs, 2)
+	for createdID := range createdIDs {
+		require.Contains(t, paths, "/submodels/"+base64.RawURLEncoding.EncodeToString([]byte(createdID)))
+	}
+}
+
+func TestRequestCountCountsFullWorkflowIterations(t *testing.T) {
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requests++
+		if r.Method == http.MethodPost {
+			_ = json.NewEncoder(w).Encode(map[string]string{"id": "resource"})
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	cfg := Config{TargetBaseURL: server.URL, Concurrency: 1, RequestCount: 2, Workflow: []WorkflowStep{
+		{Name: "create", Method: http.MethodPost, Path: "/submodels", Body: `{"id":"resource-{request}"}`},
+		{Name: "read", Method: http.MethodGet, Path: "/submodels/{id}"},
+		{Name: "delete", Method: http.MethodDelete, Path: "/submodels/{id}"},
+	}}
+	result := NewRunner().Execute(context.TODO(), cfg, nil, nil)
+	require.EqualValues(t, 6, result.TotalRequests)
+	require.Equal(t, 6, requests)
 }
 
 func TestRunnerStopBehavior(t *testing.T) {

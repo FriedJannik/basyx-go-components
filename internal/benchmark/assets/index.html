@@ -35,7 +35,6 @@
 </head>
 <body>
   <header>
-    <p class="pill">Fraunhofer IESE style benchmark console</p>
     <h1>BaSyx Benchmark Lab</h1>
     <p class="muted">Configure OpenAPI-derived workflows, run them in the backend, stop them, and inspect persisted results.</p>
   </header>
@@ -47,7 +46,7 @@
       <label>Target Base URL</label><input id="target" value="http://localhost:8081">
       <div class="grid">
         <div><label>Concurrency</label><input id="concurrency" type="number" min="1" value="1"></div>
-        <div><label>Request count</label><input id="requestCount" type="number" min="0" value="20"></div>
+        <div><label>Workflow iterations</label><input id="requestCount" type="number" min="0" value="20"></div>
       </div>
       <div class="grid">
         <div><label>Duration seconds</label><input id="duration" type="number" min="0" value="0"></div>
@@ -55,13 +54,14 @@
       </div>
       <label>Seed</label><input id="seed" value="dev-seed">
       <label>PostgreSQL DSN</label><input id="pg" placeholder="postgres://user:pass@localhost:5432/postgres?sslmode=disable">
-      <label>Default JSON body for new body steps</label><textarea id="body">{"id":"benchmark-{worker}-{seed}","idShort":"benchmark-{worker}"}</textarea>
+      <label>Default JSON body for new body steps</label><textarea id="body">{"modelType":"Submodel","id":"benchmark-{worker}-{seed}-{request}","idShort":"benchmark-{worker}-{request}","submodelElements":[]}</textarea>
       <button class="secondary" onclick="applyDefaultBodyToWorkflowBodies()">Apply Body to Workflow Steps</button>
       <label>Templates</label><div id="templates" class="templates"></div>
     </section>
     <section>
       <h2>Workflow</h2>
       <div id="workflow" class="workflow"></div>
+      <button class="secondary" onclick="useSubmodelLifecycleWorkflow()">Use Submodel Lifecycle Template</button>
       <button onclick="startRun()">Start Benchmark</button>
       <button class="secondary" onclick="refreshRuns()">Refresh Runs</button>
       <h2>Runs</h2><div id="runs" class="runs"></div>
@@ -106,6 +106,15 @@ function renderWorkflow() {
 function applyDefaultBodyToWorkflowBodies() {
   const body = document.getElementById('body').value;
   workflow = workflow.map(step => step.hasBody ? {...step, body} : step);
+  renderWorkflow();
+}
+function useSubmodelLifecycleWorkflow() {
+  const body = document.getElementById('body').value;
+  workflow = [
+    {name: 'PostSubmodel', method: 'POST', path: '/submodels', hasBody: true, body, headers: {'Content-Type':'application/json'}},
+    {name: 'GetSubmodelByID', method: 'GET', path: '/submodels/{id}', hasBody: false, body: '', headers: {}},
+    {name: 'DeleteSubmodelByID', method: 'DELETE', path: '/submodels/{id}', hasBody: false, body: '', headers: {}}
+  ];
   renderWorkflow();
 }
 function workflowForRun() {

@@ -33,6 +33,7 @@ type runAccumulator struct {
 	total         atomic.Int64
 	success       atomic.Int64
 	failed        atomic.Int64
+	iterations    atomic.Int64
 }
 
 var encodedIDAliases = []string{
@@ -90,11 +91,13 @@ func (r *Runner) executeWorker(ctx context.Context, cfg Config, workerID int, ac
 		"seed":   cfg.Seed,
 	}
 	for {
-		if shouldStop(ctx, cfg, acc.total.Load(), started) {
+		iteration, ok := acc.nextIteration(ctx, cfg, started)
+		if !ok {
 			return
 		}
+		values["request"] = strconv.FormatInt(iteration, 10)
 		for _, step := range cfg.Workflow {
-			if shouldStop(ctx, cfg, acc.total.Load(), started) {
+			if shouldStop(ctx, cfg, started) {
 				return
 			}
 			r.executeStep(ctx, cfg, workerID, step, values, acc)
@@ -102,14 +105,29 @@ func (r *Runner) executeWorker(ctx context.Context, cfg Config, workerID int, ac
 	}
 }
 
-func shouldStop(ctx context.Context, cfg Config, total int64, started time.Time) bool {
+func (acc *runAccumulator) nextIteration(ctx context.Context, cfg Config, started time.Time) (int64, bool) {
+	if shouldStop(ctx, cfg, started) {
+		return 0, false
+	}
+	if cfg.RequestCount <= 0 {
+		return acc.iterations.Add(1), true
+	}
+	for {
+		current := acc.iterations.Load()
+		if current >= int64(cfg.RequestCount) {
+			return 0, false
+		}
+		if acc.iterations.CompareAndSwap(current, current+1) {
+			return current + 1, true
+		}
+	}
+}
+
+func shouldStop(ctx context.Context, cfg Config, started time.Time) bool {
 	select {
 	case <-ctx.Done():
 		return true
 	default:
-	}
-	if cfg.RequestCount > 0 && total >= int64(cfg.RequestCount) {
-		return true
 	}
 	if cfg.DurationSeconds > 0 && time.Since(started) >= time.Duration(cfg.DurationSeconds)*time.Second {
 		return true
@@ -120,6 +138,9 @@ func shouldStop(ctx context.Context, cfg Config, total int64, started time.Time)
 func (r *Runner) executeStep(ctx context.Context, cfg Config, workerID int, step WorkflowStep, values map[string]string, acc *runAccumulator) {
 	path := replacePlaceholders(step.Path, values)
 	body := replacePlaceholders(step.Body, values)
+	if strings.EqualFold(step.Method, http.MethodPost) && !strings.Contains(step.Body, "{request}") {
+		body = appendRequestIndexToJSONID(body, values["request"])
+	}
 	target, err := joinURL(cfg.TargetBaseURL, path)
 	if err != nil {
 		acc.recordError(workerID, step, 0, err.Error(), 0)
@@ -175,6 +196,26 @@ func replacePlaceholders(value string, values map[string]string) string {
 		value = strings.ReplaceAll(value, "{"+key+"}", replacement)
 	}
 	return value
+}
+
+func appendRequestIndexToJSONID(body string, requestIndex string) string {
+	if body == "" || requestIndex == "" {
+		return body
+	}
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(body), &payload); err != nil {
+		return body
+	}
+	id, ok := payload["id"].(string)
+	if !ok || id == "" || strings.HasSuffix(id, "-"+requestIndex) {
+		return body
+	}
+	payload["id"] = id + "-" + requestIndex
+	updatedBody, err := json.Marshal(payload)
+	if err != nil {
+		return body
+	}
+	return string(updatedBody)
 }
 
 func joinURL(baseURL string, path string) (string, error) {

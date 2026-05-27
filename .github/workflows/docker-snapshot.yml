@@ -36,8 +36,8 @@ jobs:
             echo "✅ Running in upstream repository"
             echo "should-run=true" >> "$GITHUB_OUTPUT"
           else
-            echo "⏭️ Skipping buil2d — fork detected (${GITHUB_REPOSITORY})"
-            echo "should-run=true" >> "$GITHUB_OUTPUT"
+            echo "⏭️ Skipping build — fork detected (${GITHUB_REPOSITORY})"
+            echo "should-run=false" >> "$GITHUB_OUTPUT"
           fi
 
   build-and-push:

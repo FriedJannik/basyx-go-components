@@ -1,19 +1,7 @@
 name: Docker Snapshot Build
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'cmd/**'
-      - 'internal/healthprobe/**'
-      - 'internal/**'
-      - 'pkg/**'
-      - 'database/**'
-      - 'go.mod'
-      - 'go.sum'
-      - '.github/workflows/vuln-scan.yml'
-      - '.github/workflows/docker-snapshot.yml'
+  workflow_dispatch:
 
 concurrency:
   group: docker-snapshot-${{ github.ref }}

@@ -37,7 +37,7 @@ jobs:
             echo "should-run=true" >> "$GITHUB_OUTPUT"
           else
             echo "⏭️ Skipping build — fork detected (${GITHUB_REPOSITORY})"
-            echo "should-run=false" >> "$GITHUB_OUTPUT"
+            echo "should-run=true" >> "$GITHUB_OUTPUT"
           fi
 
   build-and-push:

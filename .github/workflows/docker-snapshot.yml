@@ -1,7 +1,14 @@
 name: Docker Snapshot Build
 
 on:
-  workflow_dispatch:
+  pull_request:
+    types: [closed]
+
+jobs:
+  docker-snapshot:
+    if: >
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'docker-snapshot')
 
 concurrency:
   group: docker-snapshot-${{ github.ref }}
@@ -11,6 +18,9 @@ permissions: {}
 
 jobs:
   guard:
+    if: >
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'docker-snapshot')
     runs-on: ubuntu-latest
     outputs:
       should-run: ${{ steps.check.outputs.should-run }}
@@ -27,7 +37,10 @@ jobs:
 
   build-and-push:
     needs: guard
-    if: ${{ needs.guard.outputs.should-run == 'true' }}
+    if: >
+      ${{ needs.guard.outputs.should-run == 'true' }} &&
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'docker-snapshot')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     permissions:
